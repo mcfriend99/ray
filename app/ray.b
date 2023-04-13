@@ -4,9 +4,9 @@ import .constants { * }
 import reflect
 import os
 
-var _bin_path = os.join_paths(os.dir_name(os.current_file()), '../bin/libraylib')
-var _machine_type = os.info().machine
-var _ptr_type = _machine_type.match('64') ? 'Q' : 'I'
+var _bin_path = os.join_paths(os.dir_name(os.dir_name(os.current_file())), 'bin', 'libraylib')
+var _machine_type = os.platform == 'windows' ? 'x86_64' : os.info().machine
+var _ptr_type = os.platform == 'windows' ? 'Q' : _machine_type.match('64') ? 'Q' : 'I'
 
 # struct types
 var _Vector2 = struct(
@@ -987,9 +987,15 @@ def Init(debug) {
       }
     }
     when 'windows' {
-      if _machine_type.starts_with('arm') or !_machine_type.contains('64') {
+      if _machine_type.starts_with('arm') or !_machine_type.match('64') {
         error = '64-bit non-ARM machine required to run application.'
       }
+
+      # windows require that we are have our directory in the path
+      var curr_env = os.get_env('PATH')
+      curr_env += os.join_paths(os.dir_name(os.dir_name(os.current_file())), 'bin') + ';'
+      os.set_env('PATH', curr_env)
+      _bin_path = 'libraylib.dll'
     }
   }
 
