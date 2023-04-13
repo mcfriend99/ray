@@ -1,0 +1,20 @@
+{
+  "name": "ray", 
+  "version": "1.0.0", 
+  "description": "Simple game and forms widget library for Blade based on Raylib.", 
+  "homepage": "", 
+  "tags": [
+    "game", 
+    "gui", 
+    "desktop", 
+    "engine", 
+    "widgets", 
+    "controls"
+  ], 
+  "author": "Richard Ore <eqliqandfriends@gmail.com>", 
+  "license": "ISC", 
+  "sources": [
+    "https://nyssa.bladelang.com"
+  ], 
+  "deps": {}
+}
