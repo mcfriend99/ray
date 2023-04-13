@@ -12,6 +12,8 @@ var name = Textbox({
   }
 })
 
+var slide_value = 0
+
 var f = Form(ui, {
   width: 800,
   height: 450,
@@ -61,7 +63,24 @@ var f = Form(ui, {
         value: name.text.length() < 100 ? name.text.length() : 100,
         # indeterminate: true,
       }) : nil
-    }
+    },
+    Slider({
+      x: 265,
+      y: 280,
+      height: 8,
+      width: 265,
+      min: 0,
+      max: 1000,
+      as_int: true,
+      on_change: @(s, v) {
+        slide_value = v
+      }
+    }),
+    Label({
+      x: 265,
+      y: 290,
+      text: @() { return to_string(slide_value) + '/1000' },
+    })
   ]
 })
 f.Paint()

@@ -6,3 +6,4 @@ import .label { * }
 import .line { * }
 import .textbox { * }
 import .progress { * }
+import .slider { * }

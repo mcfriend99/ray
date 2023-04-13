@@ -30,6 +30,7 @@ class Textbox <  Control {
     if options.contains('font') {
       self.font = options.font
     }
+    self.on_change = options.get('on_change', @(s, t){})
 
     # update textbox bounds since default bound may have width set to zero.
     self.bounds = ray.Rectangle(self.x, self.y, self.width, self.height)
@@ -65,12 +66,15 @@ class Textbox <  Control {
         }
   
         key = ui.GetCharPressed()
+
+        if self.on_change self.on_change(self, self.text)
       }
   
       # delete on backspace
       if (ui.IsKeyPressed(ray.KEY_BACKSPACE) and !ui.IsKeyDown(ray.KEY_BACKSPACE)) or
         (ui.IsKeyDown(ray.KEY_BACKSPACE) and !ui.IsKeyPressed(ray.KEY_BACKSPACE) and can_delete) {
           self.text = self.text[,-1]
+          if self.on_change self.on_change(self, self.text)
       }
 
       var ctrl_down = _is_osx ? (
@@ -82,6 +86,7 @@ class Textbox <  Control {
       # handle paste
       if ctrl_down and ui.IsKeyDown(ray.KEY_V) {
         self.text += ui.GetClipboardText()
+        if self.on_change self.on_change(self, self.text)
       }
     }
 

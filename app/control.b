@@ -44,7 +44,7 @@ class Control {
 
   get_text() {
     if is_function(self.text)
-      return self.text()
+      return to_string(self.text())
     return self.text
   }
 

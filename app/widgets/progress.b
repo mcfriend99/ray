@@ -18,6 +18,7 @@ class Progress < Control {
 
     # update progress bounds since default bound may have width set to zero.
     self.bounds = ray.Rectangle(self.x, self.y, self.width, self.height)
+    self._inner_bounds = nil
   }
 
   Paint(ui) {
@@ -27,16 +28,15 @@ class Progress < Control {
     var inner_width = bounds.width - (self.padding * 2)
     var inner_height = bounds.height - (self.padding * 2)
 
-    var inner_bounds
     if !self.indeterminate {
-      inner_bounds = ray.Rectangle(
+      self._inner_bounds = ray.Rectangle(
         bounds.x + self.padding,
         bounds.y + self.padding,
         (self.value / (self.max - self.min)) * inner_width,
         inner_height
       )
     } else {
-      inner_bounds = ray.Rectangle(
+      self._inner_bounds = ray.Rectangle(
         bounds.x + self.padding + ((microtime() / 5000) % (inner_width - (inner_width * 0.3))),
         bounds.y + self.padding,
         inner_width * 0.3,
@@ -47,6 +47,6 @@ class Progress < Control {
     # draw outer
     ui.DrawRectangleRec(self.bounds, self.background_color)
     # draw inner
-    ui.DrawRectangleRec(inner_bounds, self.color)
+    ui.DrawRectangleRec(self._inner_bounds, self.color)
   }
 }
