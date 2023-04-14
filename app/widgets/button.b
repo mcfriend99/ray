@@ -2,6 +2,7 @@ import ..ray
 import ..control { Control }
 
 class Button < Control {
+  var _show_children = false
 
   Button(options) {
     parent(options)
@@ -28,14 +29,14 @@ class Button < Control {
     if self.height == 0 and self.auto_size {
       self.height = ray.DeVector2(
         ui.MeasureTextEx(self.font, text, self.font_size, 0)).y +  (self.y_padding * 2)
-      self.bounds = ray.Rectangle(self.x, self.y, self.width, self.height)
+      self.update_bounds()
     }
 
     # if width is zero and auto_size is true, automatically set width.
     if self.width == 0 and self.auto_size {
       self.width = ray.DeVector2(
         ui.MeasureTextEx(self.font, text, self.font_size, 0)).x + (self.x_padding * 2)
-      self.bounds = ray.Rectangle(self.x, self.y, self.width, self.height)
+      self.update_bounds()
     }
 
     ui.DrawRectangleRec(
@@ -46,8 +47,8 @@ class Button < Control {
       self.font, 
       text, 
       ray.Vector2(
-        self.x + self.x_padding, 
-        self.y + self.y_padding
+        self.rect.x + self.x_padding, 
+        self.rect.y + self.y_padding
       ), 
       self.font_size, 
       0, 

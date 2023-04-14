@@ -2,6 +2,7 @@ import ..ray
 import ..control { Control }
 
 class Progress < Control {
+  var _show_children = false
 
   Progress(options) {
     parent(options)
@@ -17,7 +18,7 @@ class Progress < Control {
     self.background_color = options.get('background_color', ray.SKYBLUE)
 
     # update progress bounds since default bound may have width set to zero.
-    self.bounds = ray.Rectangle(self.x, self.y, self.width, self.height)
+    self.update_bounds()
     self._inner_bounds = nil
   }
 

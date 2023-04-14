@@ -1,7 +1,8 @@
 import .ray
 
 class Control {
-  # props
+  # private props
+  var _show_children = true
   var _default_font_size = 16
   var _default_font_color = ray.Color(90, 90, 90, 255)
   var _theme_color = ray.Color(0, 100, 200, 255)
@@ -13,6 +14,12 @@ class Control {
   var _was_clicked = false
   var _was_right_clicked = false
   var _is_form_active = false
+
+  # relation
+  var _parent
+
+  # public props
+  var rect = {}
 
   Control(options) {
     if !options options = {}
@@ -39,7 +46,11 @@ class Control {
     self.blur_listener = options.get('on_blur', @(sender, data){})
 
     # auto sets
-    self.bounds = ray.Rectangle(self.x, self.y, self.width, self.height)
+    self.update_bounds()
+  }
+
+  can_have_child() {
+    return self._show_children
   }
 
   get_text() {
@@ -62,14 +73,51 @@ class Control {
     return font
   }
 
+  update_bounds(width, height) {
+    if !width width = self.width
+    if !height height = self.height
+
+    if self._parent != nil {
+      self.bounds = ray.Rectangle(
+        self._parent.x + self.x, 
+        self._parent.y + self.y, 
+        width, 
+        height
+      )
+
+      self.rect = {
+        x: self._parent.x + self.x,
+        y: self._parent.y + self.y,
+        width: width,
+        height: height,
+      }
+    } else {
+      self.bounds = ray.Rectangle(
+        self.x, 
+        self.y, 
+        width, 
+        height
+      )
+
+      self.rect = {
+        x: self.x,
+        y: self.y,
+        width: width,
+        height: height,
+      }
+    }
+  }
+
   Paint(ui) {
+    self.update_bounds()
+
     # detect mouse events
     var mousepos = ui.GetMousePosition()
     if ui.CheckCollisionPointRec(mousepos, self.bounds) {
       if self._is_form_active ui.SetMouseCursor(self.cursor)
       var mousepos_coords = ray.DeVector2(mousepos)
-      mousepos_coords.x -= self.x
-      mousepos_coords.y -= self.y
+      mousepos_coords.x -= self.rect.x
+      mousepos_coords.y -= self.rect.y
 
       if !self._mouse_is_hover and self.mouse_over_listener 
         self.mouse_over_listener(self, mousepos_coords)

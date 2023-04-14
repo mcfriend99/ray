@@ -2,6 +2,7 @@ import ..ray
 import ..control { Control }
 
 class Line < Control {
+  var _show_children = false
 
   Line(options) {
     parent(options)

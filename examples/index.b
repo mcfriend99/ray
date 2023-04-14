@@ -80,6 +80,20 @@ var f = Form(ui, {
       x: 265,
       y: 290,
       text: @() { return to_string(slide_value) + '/1000' },
+    }),
+    Box({
+      x: 265,
+      y: 320,
+      width: 265,
+      height: 40,
+      children: [
+        Button({
+          x: 0,
+          y: 0,
+          text: 'Ok',
+          on_click: @(s,e) { echo e },
+        })
+      ]
     })
   ]
 })

@@ -5,6 +5,7 @@ import ..control { Control }
 var _is_osx = os.platform == 'osx'
 
 class Textbox <  Control {
+  var _show_children = false
   var _mouse_is_hover = false
   var _was_activated = false
   var _frame_counter = 0
@@ -33,7 +34,7 @@ class Textbox <  Control {
     self.on_change = options.get('on_change', @(s, t){})
 
     # update textbox bounds since default bound may have width set to zero.
-    self.bounds = ray.Rectangle(self.x, self.y, self.width, self.height)
+    self.update_bounds()
   }
 
   Paint(ui) {
@@ -46,7 +47,7 @@ class Textbox <  Control {
         ui.MeasureTextEx(self.font, self.text ? self.text : 'y', self.font_size, 0)).y + 
         (self.padding * 2) + 
         (self.border_width * 2)
-      self.bounds = ray.Rectangle(self.x, self.y, self.width, self.height)
+      self.update_bounds()
     }
   
     if self._was_activated self._frame_counter++
@@ -122,8 +123,8 @@ class Textbox <  Control {
       self.font, 
       chars_shown, 
       ray.Vector2(
-        self.x + self.padding + self.border_width, 
-        self.y + self.padding + self.border_width
+        self.rect.x + self.padding + self.border_width, 
+        self.rect.y + self.padding + self.border_width
       ), 
       self.font_size, 
       0, 
@@ -135,9 +136,9 @@ class Textbox <  Control {
       var current_text_size = ray.DeVector2(
         ui.MeasureTextEx(self.font, chars_shown, self.font_size, 0)
       )
-      var caret_x = self.x + self.padding + current_text_size.x + self.border_width + 1
-      var caret_ys = self.y + self.padding + self.border_width - 1
-      var caret_ye = self.y + current_text_size.y + self.padding + self.border_width + 1
+      var caret_x = self.rect.x + self.padding + current_text_size.x + self.border_width + 1
+      var caret_ys = self.rect.y + self.padding + self.border_width - 1
+      var caret_ye = self.rect.y + current_text_size.y + self.padding + self.border_width + 1
       ui.DrawLineBezier(
         ray.Vector2(caret_x, caret_ys), 
         ray.Vector2(caret_x, caret_ye), 

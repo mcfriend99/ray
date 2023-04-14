@@ -2,6 +2,7 @@ import ..ray
 import .progress { Progress }
 
 class Slider < Progress {
+  var _show_children = false
 
   Slider(options) {
     parent(options)

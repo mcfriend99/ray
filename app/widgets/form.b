@@ -20,6 +20,47 @@ class Form < Control {
     self.title = options.get('title', self.text)
   }
 
+  _Paint(ui, el, mousepos) {
+    var active_found = false
+    ui.BeginScissorMode(el.rect.x, el.rect.y, el.rect.width, el.rect.height)
+    if !el.can_have_child() return active_found
+
+    for child in el.children {
+      if is_function(child) child = child()
+      if child != nil {
+        if !instance_of(child, Control)
+          die Exception('invalid control in UI')
+        if !reflect.has_prop(child, 'font') {
+          child.font = self.font
+        }
+
+        child._parent = el
+
+        # update cursor
+        if self.ui.CheckCollisionPointRec(mousepos, child.bounds) {
+          child._is_form_active = true
+          active_found = true
+        } else {
+          child._is_form_active = false
+        }
+
+        child.Paint(self.ui)
+
+        if child.children {
+          var has_active_child = self._Paint(ui, child, mousepos)
+
+          # TODO: Review this. This might be a bad idea
+          if has_active_child {
+            child._is_form_active = false
+          }
+        }
+      }
+    }
+
+    ui.EndScissorMode()
+    return active_found
+  }
+
   Paint() {
     var flags = ray.FLAG_MSAA_4X_HINT | ray.FLAG_WINDOW_HIGHDPI
     if self.resizable {
@@ -37,33 +78,18 @@ class Form < Control {
       self.font = self.load_font(self.ui, self.font)
     }
 
+    # reset x and y so that generations can get correct 
+    # coordinates within the form.
+    self.x = 0
+    self.y = 0
+    self.update_bounds()
+
     while !self.ui.WindowShouldClose() {
       self.ui.BeginDrawing()
       {
         self.ui.ClearBackground(self.color)
-        var form_active_found = false
         var mousepos = self.ui.GetMousePosition()
-
-        for child in self.children {
-          if is_function(child) child = child()
-          if child != nil {
-            if !instance_of(child, Control)
-              die Exception('invalid control in UI')
-            if !reflect.has_prop(child, 'font') {
-              child.font = self.font
-            }
-
-            # update cursor
-            if self.ui.CheckCollisionPointRec(mousepos, child.bounds) {
-              child._is_form_active = true
-              form_active_found = true
-            } else {
-              child._is_form_active = false
-            }
-
-            child.Paint(self.ui)
-          }
-        }
+        var form_active_found = self._Paint(self.ui, self, mousepos)
 
         if !form_active_found {
           self.ui.SetMouseCursor(self._default_cursor)

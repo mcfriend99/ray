@@ -2,6 +2,7 @@ import ..ray
 import ..control { Control }
 
 class Label < Control {
+  var _show_children = false
 
   Label(options) {
     parent(options)
@@ -22,15 +23,15 @@ class Label < Control {
       self.width = ray.DeVector2(
         ui.MeasureTextEx(self.font, text, self.font_size, 0)).x + 
         (self.padding * 2)
-      self.bounds = ray.Rectangle(self.x, self.y, self.width, self.height)
+      self.update_bounds()
     }
 
     ui.DrawTextEx(
       self.font, 
       text, 
       ray.Vector2(
-        self.x + self.padding, 
-        self.y + self.padding
+        self.rect.x + self.padding, 
+        self.rect.y + self.padding
       ), 
       self.font_size, 
       0, 

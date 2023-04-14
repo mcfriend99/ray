@@ -630,6 +630,7 @@ class _Lib {
     self.BeginBlendMode = ray.define('BeginBlendMode', void, int)
     self.EndBlendMode = ray.define('EndBlendMode', void)
     self.BeginScissorMode = ray.define('BeginScissorMode', void, int, int, int, int)
+    self.EndScissorMode = ray.define('EndScissorMode', void)
     # var BeginVrStereoMode = ray.define('BeginVrStereoMode', void)
     # var EndVrStereoMode = ray.define('EndVrStereoMode', void)
 
