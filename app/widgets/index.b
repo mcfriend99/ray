@@ -7,3 +7,5 @@ import .line { * }
 import .textbox { * }
 import .progress { * }
 import .slider { * }
+import .image { * }
+import .message { * }

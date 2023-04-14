@@ -8,7 +8,6 @@ class Box < Control {
   }
 
   Paint(ui) {
-    if !self.visible return
     parent.Paint(ui)
     ui.DrawRectangleRec(self.bounds, self.color)
   }

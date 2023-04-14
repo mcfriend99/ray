@@ -38,7 +38,6 @@ class Textbox <  Control {
   }
 
   Paint(ui) {
-    if !self.visible return
     parent.Paint(ui)
 
     # if height is zero and auto_size is true, automatically set height.

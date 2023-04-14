@@ -12,8 +12,6 @@ class Slider < Progress {
   }
 
   Paint(ui) {
-    if !self.visible return
-
     var bound = ray.DeRectangle(self.bounds)
 
     var mousepos = ui.GetMousePosition()

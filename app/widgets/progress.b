@@ -23,8 +23,8 @@ class Progress < Control {
   }
 
   Paint(ui) {
-    if !self.visible return
     parent.Paint(ui)
+
     var bounds = ray.DeRectangle(self.bounds)
     var inner_width = bounds.width - (self.padding * 2)
     var inner_height = bounds.height - (self.padding * 2)

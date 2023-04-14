@@ -59,6 +59,12 @@ class Control {
     return self.text
   }
 
+  is_visible() {
+    if is_function(self.visible)
+      return self.visible()
+    return self.visible
+  }
+
   load_font(ui, path) {
     var font = ui.LoadFontEx(path, 56, nil, 0)
     var t1 = ray.DeFont(font).texture
@@ -79,17 +85,17 @@ class Control {
 
     if self._parent != nil {
       self.bounds = ray.Rectangle(
-        self._parent.x + self.x, 
-        self._parent.y + self.y, 
+        self._parent.rect.x + self.x, 
+        self._parent.rect.y + self.y, 
         width, 
         height
       )
 
       self.rect = {
-        x: self._parent.x + self.x,
-        y: self._parent.y + self.y,
-        width: width,
-        height: height,
+        x: self._parent.rect.x + self.x,
+        y: self._parent.rect.y + self.y,
+        width,
+        height,
       }
     } else {
       self.bounds = ray.Rectangle(
@@ -102,15 +108,13 @@ class Control {
       self.rect = {
         x: self.x,
         y: self.y,
-        width: width,
-        height: height,
+        width,
+        height,
       }
     }
   }
 
   Paint(ui) {
-    self.update_bounds()
-
     # detect mouse events
     var mousepos = ui.GetMousePosition()
     if ui.CheckCollisionPointRec(mousepos, self.bounds) {
@@ -150,6 +154,6 @@ class Control {
     }
   }
 
-  Dispose() {}
+  Dispose(ui) {}
 }
 

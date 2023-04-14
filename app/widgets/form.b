@@ -33,25 +33,27 @@ class Form < Control {
         if !reflect.has_prop(child, 'font') {
           child.font = self.font
         }
+        if child.is_visible() {
+          child._parent = el
 
-        child._parent = el
+          # update cursor
+          if self.ui.CheckCollisionPointRec(mousepos, child.bounds) {
+            child._is_form_active = true
+            active_found = true
+          } else {
+            # child._is_form_active = false
+          }
 
-        # update cursor
-        if self.ui.CheckCollisionPointRec(mousepos, child.bounds) {
-          child._is_form_active = true
-          active_found = true
-        } else {
-          child._is_form_active = false
-        }
+          child.update_bounds()
+          child.Paint(self.ui)
 
-        child.Paint(self.ui)
+          if child.children {
+            var has_active_child = self._Paint(ui, child, mousepos)
 
-        if child.children {
-          var has_active_child = self._Paint(ui, child, mousepos)
-
-          # TODO: Review this. This might be a bad idea
-          if has_active_child {
-            child._is_form_active = false
+            # TODO: Review this. This might be a bad idea
+            if has_active_child {
+              child._is_form_active = false
+            }
           }
         }
       }
@@ -62,7 +64,7 @@ class Form < Control {
   }
 
   Paint() {
-    var flags = ray.FLAG_MSAA_4X_HINT | ray.FLAG_WINDOW_HIGHDPI
+    var flags = ray.FLAG_MSAA_4X_HINT | ray.FLAG_WINDOW_HIGHDPI | ray.FLAG_VSYNC_HINT
     if self.resizable {
       flags |= ray.FLAG_WINDOW_RESIZABLE
     }
@@ -109,7 +111,7 @@ class Form < Control {
       if child != nil {
         if(!instance_of(child, Control))
           die Exception('invalid control in UI')
-        child.Dispose()
+        child.Dispose(self.ui)
       }
     }
     if !is_string(self.font) self.ui.UnloadFont(self.font)

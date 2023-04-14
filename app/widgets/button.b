@@ -20,7 +20,6 @@ class Button < Control {
   }
 
   Paint(ui) {
-    if !self.visible return
     parent.Paint(ui)
 
     var text = self.get_text()

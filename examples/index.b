@@ -13,6 +13,7 @@ var name = Textbox({
 })
 
 var slide_value = 0
+var show_message = false
 
 var f = Form(ui, {
   width: 800,
@@ -52,7 +53,7 @@ var f = Form(ui, {
       y: 180,
       x_padding: 12,
       text: 'Search',
-      on_click: @(s, e) { echo e }
+      on_click: @(s, e) { show_message = true }
     }),
     @() {
       return name.text.length() > 0 ? Progress({
@@ -92,9 +93,20 @@ var f = Form(ui, {
           y: 0,
           text: 'Ok',
           on_click: @(s,e) { echo e },
-        })
+        }),
       ]
-    })
+    }),
+    Image({
+      x: 10,
+      y: 10,
+      width: 50,
+      height: 50,
+      src: 'icon.png',
+    }),
+    Message({
+      text: 'It works',
+      visible: @(){ return show_message }
+    }),
   ]
 })
 f.Paint()

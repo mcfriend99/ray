@@ -11,7 +11,6 @@ class Line < Control {
   }
 
   Paint(ui) {
-    if !self.visible return
     parent.Paint(ui)
     var bounds = ray.DeRectangle(self.bounds)
 

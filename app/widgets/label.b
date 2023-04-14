@@ -9,11 +9,10 @@ class Label < Control {
     if !options options = {}
 
     self.font_size = options.get('font_size', self._default_font_size)
-    self.font_color = options.get('font_color', self._default_font_color)
+    self.color = options.get('color', self._default_font_color)
   }
 
   Paint(ui) {
-    if !self.visible return
     parent.Paint(ui)
 
     var text = self.get_text()
@@ -35,7 +34,7 @@ class Label < Control {
       ), 
       self.font_size, 
       0, 
-      self.font_color
+      self.color
     )
   }
 }

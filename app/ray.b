@@ -6,7 +6,12 @@ import os
 
 var _bin_path = os.join_paths(os.dir_name(os.dir_name(os.current_file())), 'bin', 'libraylib')
 var _machine_type = os.platform == 'windows' ? 'x86_64' : os.info().machine
-var _ptr_type = os.platform == 'windows' ? 'Q' : _machine_type.match('64') ? 'Q' : 'I'
+var _ptr_type = 'Q'
+
+
+# -------------------------------------------------------------
+# RAYLIB TYPES
+# -------------------------------------------------------------
 
 # struct types
 var _Vector2 = struct(
@@ -35,6 +40,7 @@ var _Vector4 = struct(
 def DeVector4(v) {
   return st.unpack('fx/fy/fz/fw', v)
 }
+var _Quaternion = _Vector4
 var DeQuaternion = DeVector4
 
 var _Matrix = struct(
@@ -363,6 +369,29 @@ def DeRay(v) {
   }
 }
 
+var _float3 = struct( # v
+  float,
+  float,
+  float
+)
+def Defloat3(v) {
+  return st.unpack('f3', v).to_list()[1]
+}
+
+var _float16 = struct( # v
+  float, float, float, float,
+  float, float, float, float,
+  float, float, float, float
+)
+def Defloat16(v) {
+  return st.unpack('f16', v).to_list()[1]
+}
+
+
+# -------------------------------------------------------------
+# DECLARATIONS
+# -------------------------------------------------------------
+
 /**
  * Structs
  */
@@ -512,6 +541,20 @@ def Ray(position, direction) {
   return st.pack('C${position.length()}C${locs.length()}', id, locs)
 }
 
+def float3(floats) {
+  if !is_list(params) params = to_list(params)
+  if params.length() < 3 
+    params.extend([0] * (3 - params.length()))
+  return st.pack('f3', params)
+}
+
+def float16(floats) {
+  if !is_list(params) params = to_list(params)
+  if params.length() < 16 
+    params.extend([0] * (16 - params.length()))
+  return st.pack('f16', params)
+}
+
 /**
  * Colors
  */
@@ -539,6 +582,7 @@ var DARKBROWN = Color(76, 63, 47, 255) # Dark Brown
 var WHITE = Color(255, 255, 255, 255) # White
 var BLACK = Color(0, 0, 0, 255) # Black
 var BLANK = Color(0, 0, 0, 0) # Blank (Transparent)
+var TRANSPARENT = BLANK
 var MAGENTA = Color(255, 0, 255, 255) # Magenta
 var RAYWHITE = Color(245, 245, 245, 255) # My own White (raylib logo)
 
@@ -963,7 +1007,130 @@ class _Lib {
     self.TextToUpper = ray.define('TextToUpper', char_ptr, char_ptr)                      
     self.TextToLower = ray.define('TextToLower', char_ptr, char_ptr)                      
     self.TextToPascal = ray.define('TextToPascal', char_ptr, char_ptr)                     
-    self.TextToInteger = ray.define('TextToInteger', int, char_ptr)                            
+    self.TextToInteger = ray.define('TextToInteger', int, char_ptr)  
+    
+    
+    # ----------------------------------------------------------------
+    # Math functions (raymath.h)
+    # ----------------------------------------------------------------
+    self.math = {
+      # Utils math
+      Clamp: ray.define('Clamp', float, float, float, float),
+      Lerp: ray.define('Lerp', float, float, float, float),
+      Normalize: ray.define('Normalize', float, float, float, float),
+      Remap: ray.define('Remap', float, float, float, float, float, float),
+      Wrap: ray.define('Wrap', float, float, float, float),
+      FloatEquals: ray.define('FloatEquals', int, float, float),
+      # Vector2 math
+      Vector2Zero: ray.define('Vector2Zero', _Vector2, void),
+      Vector2One: ray.define('Vector2One', _Vector2, void),
+      Vector2Add: ray.define('Vector2Add', _Vector2, _Vector2, _Vector2),
+      Vector2AddValue: ray.define('Vector2AddValue', _Vector2, _Vector2, float),
+      Vector2Subtract: ray.define('Vector2Subtract', _Vector2, _Vector2, _Vector2),
+      Vector2SubtractValue: ray.define('Vector2SubtractValue', _Vector2, _Vector2, float),
+      Vector2Length: ray.define('Vector2Length', float, _Vector2),
+      Vector2LengthSqr: ray.define('Vector2LengthSqr', float, _Vector2),
+      Vector2DotProduct: ray.define('Vector2DotProduct', float, _Vector2, _Vector2),
+      Vector2Distance: ray.define('Vector2Distance', float, _Vector2, _Vector2),
+      Vector2DistanceSqr: ray.define('Vector2DistanceSqr', float, _Vector2, _Vector2),
+      Vector2Angle: ray.define('Vector2Angle', float, _Vector2, _Vector2),
+      Vector2Scale: ray.define('Vector2Scale', _Vector2, _Vector2, float),
+      Vector2Multiply: ray.define('Vector2Multiply', _Vector2, _Vector2, _Vector2),
+      Vector2Negate: ray.define('Vector2Negate', _Vector2, _Vector2),
+      Vector2Divide: ray.define('Vector2Divide', _Vector2, _Vector2, _Vector2),
+      Vector2Normalize: ray.define('Vector2Normalize', _Vector2, _Vector2),
+      Vector2Transform: ray.define('Vector2Transform', _Vector2, _Vector2, _Matrix),
+      Vector2Lerp: ray.define('Vector2Lerp', _Vector2, _Vector2, _Vector2, float),
+      Vector2Reflect: ray.define('Vector2Reflect', _Vector2, _Vector2, _Vector2),
+      Vector2Rotate: ray.define('Vector2Rotate', _Vector2, _Vector2, float),
+      Vector2MoveTowards: ray.define('Vector2MoveTowards', _Vector2, _Vector2, _Vector2, float),
+      Vector2Invert: ray.define('Vector2Invert', _Vector2, _Vector2),
+      Vector2Clamp: ray.define('Vector2Clamp', _Vector2, _Vector2, _Vector2, _Vector2),
+      Vector2ClampValue: ray.define('Vector2ClampValue', _Vector2, _Vector2, float, float),
+      Vector2Equals: ray.define('Vector2Equals', int, _Vector2, _Vector2),
+      # Vector3 math
+      Vector3Zero: ray.define('Vector3Zero', _Vector3, void),
+      Vector3One: ray.define('Vector3One', _Vector3, void),
+      Vector3Add: ray.define('Vector3Add', _Vector3, _Vector3, _Vector3),
+      Vector3AddValue: ray.define('Vector3AddValue', _Vector3, _Vector3, float),
+      Vector3Subtract: ray.define('Vector3Subtract', _Vector3, _Vector3, _Vector3),
+      Vector3SubtractValue: ray.define('Vector3SubtractValue', _Vector3, _Vector3, float),
+      Vector3Scale: ray.define('Vector3Scale', _Vector3, _Vector3, float),
+      Vector3Multiply: ray.define('Vector3Multiply', _Vector3, _Vector3, _Vector3),
+      Vector3CrossProduct: ray.define('Vector3CrossProduct', _Vector3, _Vector3, _Vector3),
+      Vector3Perpendicular: ray.define('Vector3Perpendicular', _Vector3, _Vector3),
+      Vector3Length: ray.define('Vector3Length', float, _Vector3),
+      Vector3LengthSqr: ray.define('Vector3LengthSqr', float, _Vector3),
+      Vector3DotProduct: ray.define('Vector3DotProduct', float, _Vector3, _Vector3),
+      Vector3Distance: ray.define('Vector3Distance', float, _Vector3, _Vector3),
+      Vector3DistanceSqr: ray.define('Vector3DistanceSqr', float, _Vector3, _Vector3),
+      Vector3Angle: ray.define('Vector3Angle', float, _Vector3, _Vector3),
+      Vector3Negate: ray.define('Vector3Negate', _Vector3, _Vector3),
+      Vector3Divide: ray.define('Vector3Divide', _Vector3, _Vector3, _Vector3),
+      Vector3Normalize: ray.define('Vector3Normalize', _Vector3, _Vector3),
+      Vector3OrthoNormalize: ray.define('Vector3OrthoNormalize', void, ptr, ptr), # ptr = Vector3, _Vector3
+      Vector3Transform: ray.define('Vector3Transform', _Vector3, _Vector3, _Matrix),
+      Vector3RotateByQuaternion: ray.define('Vector3RotateByQuaternion', _Vector3, _Vector3, _Quaternion),
+      Vector3RotateByAxisAngle: ray.define('Vector3RotateByAxisAngle', _Vector3, _Vector3, _Vector3, float),
+      Vector3Lerp: ray.define('Vector3Lerp', _Vector3, _Vector3, _Vector3, float),
+      Vector3Reflect: ray.define('Vector3Reflect', _Vector3, _Vector3, _Vector3),
+      Vector3Min: ray.define('Vector3Min', _Vector3, _Vector3, _Vector3),
+      Vector3Max: ray.define('Vector3Max', _Vector3, _Vector3, _Vector3),
+      Vector3Barycenter: ray.define('Vector3Barycenter', _Vector3, _Vector3, _Vector3, _Vector3, _Vector3),
+      Vector3Unproject: ray.define('Vector3Unproject', _Vector3, _Vector3, _Matrix, _Matrix),
+      Vector3ToFloatV: ray.define('Vector3ToFloatV', _float3, _Vector3),
+      Vector3Invert: ray.define('Vector3Invert', _Vector3, _Vector3),
+      Vector3Clamp: ray.define('Vector3Clamp', _Vector3, _Vector3, _Vector3, _Vector3),
+      Vector3ClampValue: ray.define('Vector3ClampValue', _Vector3, _Vector3, float, float),
+      Vector3Equals: ray.define('Vector3Equals', int, _Vector3, _Vector3),
+      Vector3Refract: ray.define('Vector3Refract', _Vector3, _Vector3, _Vector3, float),
+      # Matrix math
+      MatrixDeterminant: ray.define('MatrixDeterminant', float, _Matrix),
+      MatrixTrace: ray.define('MatrixTrace', float, _Matrix),
+      MatrixTranspose: ray.define('MatrixTranspose', _Matrix, _Matrix),
+      MatrixInvert: ray.define('MatrixInvert', _Matrix, _Matrix),
+      MatrixIdentity: ray.define('MatrixIdentity', _Matrix, void),
+      MatrixAdd: ray.define('MatrixAdd', _Matrix, _Matrix, _Matrix),
+      MatrixSubtract: ray.define('MatrixSubtract', _Matrix, _Matrix, _Matrix),
+      MatrixMultiply: ray.define('MatrixMultiply', _Matrix, _Matrix, _Matrix),
+      MatrixTranslate: ray.define('MatrixTranslate', _Matrix, float, float, float),
+      MatrixRotate: ray.define('MatrixRotate', _Matrix, _Vector3, float),
+      MatrixRotateX: ray.define('MatrixRotateX', _Matrix, float),
+      MatrixRotateY: ray.define('MatrixRotateY', _Matrix, float),
+      MatrixRotateZ: ray.define('MatrixRotateZ', _Matrix, float),
+      MatrixRotateXYZ: ray.define('MatrixRotateXYZ', _Matrix, _Vector3),
+      MatrixRotateZYX: ray.define('MatrixRotateZYX', _Matrix, _Vector3),
+      MatrixScale: ray.define('MatrixScale', _Matrix, float, float, float),
+      MatrixFrustum: ray.define('MatrixFrustum', _Matrix, double, double, double, double, double, double),
+      MatrixPerspective: ray.define('MatrixPerspective', _Matrix, double, double, double, double),
+      MatrixOrtho: ray.define('MatrixOrtho', _Matrix, double, double, double, double, double, double),
+      MatrixLookAt: ray.define('MatrixLookAt', _Matrix, _Vector3, _Vector3, _Vector3),
+      MatrixToFloatV: ray.define('MatrixToFloatV', _float16, _Matrix),
+      # Quaternion math
+      QuaternionAdd: ray.define('QuaternionAdd', _Quaternion, _Quaternion, _Quaternion),
+      QuaternionAddValue: ray.define('QuaternionAddValue', _Quaternion, _Quaternion, float),
+      QuaternionSubtract: ray.define('QuaternionSubtract', _Quaternion, _Quaternion, _Quaternion),
+      QuaternionSubtractValue: ray.define('QuaternionSubtractValue', _Quaternion, _Quaternion, float),
+      QuaternionIdentity: ray.define('QuaternionIdentity', _Quaternion, void),
+      QuaternionLength: ray.define('QuaternionLength', float, _Quaternion),
+      QuaternionNormalize: ray.define('QuaternionNormalize', _Quaternion, _Quaternion),
+      QuaternionInvert: ray.define('QuaternionInvert', _Quaternion, _Quaternion),
+      QuaternionMultiply: ray.define('QuaternionMultiply', _Quaternion, _Quaternion, _Quaternion),
+      QuaternionScale: ray.define('QuaternionScale', _Quaternion, _Quaternion, float),
+      QuaternionDivide: ray.define('QuaternionDivide', _Quaternion, _Quaternion, _Quaternion),
+      QuaternionLerp: ray.define('QuaternionLerp', _Quaternion, _Quaternion, _Quaternion, float),
+      QuaternionNlerp: ray.define('QuaternionNlerp', _Quaternion, _Quaternion, _Quaternion, float),
+      QuaternionSlerp: ray.define('QuaternionSlerp', _Quaternion, _Quaternion, _Quaternion, float),
+      QuaternionFromVector3ToVector3: ray.define('QuaternionFromVector3ToVector3', _Quaternion, _Vector3, _Vector3),
+      QuaternionFromMatrix: ray.define('QuaternionFromMatrix', _Quaternion, _Matrix),
+      QuaternionToMatrix: ray.define('QuaternionToMatrix', _Matrix, _Quaternion),
+      QuaternionFromAxisAngle: ray.define('QuaternionFromAxisAngle', _Quaternion, _Vector3, float),
+      QuaternionToAxisAngle: ray.define('QuaternionToAxisAngle', void, _Quaternion, ptr, ptr), # ptr = Vector3, float
+      QuaternionFromEuler: ray.define('QuaternionFromEuler', _Quaternion, float, float, float),
+      QuaternionToEuler: ray.define('QuaternionToEuler', _Vector3, _Quaternion),
+      QuaternionTransform: ray.define('QuaternionTransform', _Quaternion, _Quaternion, _Matrix),
+      QuaternionEquals: ray.define('QuaternionEquals', int, _Quaternion, _Quaternion),
+    }
   }
 }
 
