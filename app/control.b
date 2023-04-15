@@ -9,10 +9,10 @@ class Control {
   var _default_cursor = ray.MOUSE_CURSOR_DEFAULT
 
   # states
-  var _mouse_is_hover = false
-  var _was_activated = false
-  var _was_clicked = false
-  var _was_right_clicked = false
+  var mouse_is_hover = false
+  var was_activated = false
+  var was_clicked = false
+  var was_right_clicked = false
   var _is_form_active = false
 
   # relation
@@ -115,7 +115,7 @@ class Control {
   }
 
   Paint(ui) {
-    # detect mouse events
+   /*  # detect mouse events
     var mousepos = ui.GetMousePosition()
     if ui.CheckCollisionPointRec(mousepos, self.bounds) {
       if self._is_form_active ui.SetMouseCursor(self.cursor)
@@ -123,35 +123,35 @@ class Control {
       mousepos_coords.x -= self.rect.x
       mousepos_coords.y -= self.rect.y
 
-      if !self._mouse_is_hover and self.mouse_over_listener 
+      if !self.mouse_is_hover and self.mouse_over_listener 
         self.mouse_over_listener(self, mousepos_coords)
-      self._mouse_is_hover = true
+      self.mouse_is_hover = true
       if ui.IsMouseButtonDown(ray.MOUSE_BUTTON_LEFT) {
-        if !self._was_clicked and self.click_listener 
+        if !self.was_clicked and self.click_listener 
           self.click_listener(self, mousepos_coords)
-        self._was_clicked = true
-        self._was_activated = true
-        self._was_right_clicked = false
+        self.was_clicked = true
+        self.was_activated = true
+        self.was_right_clicked = false
       } else if(ui.IsMouseButtonDown(ray.MOUSE_BUTTON_RIGHT)) {
-        if !self._was_right_clicked and self.context_listener 
+        if !self.was_right_clicked and self.context_listener 
           self.context_listener(self, mousepos_coords)
-        self._was_right_clicked = true
+        self.was_right_clicked = true
       } else if(ui.IsMouseButtonUp(ray.MOUSE_BUTTON_LEFT)) {
-        self._was_clicked = false
+        self.was_clicked = false
       } else if(ui.IsMouseButtonUp(ray.MOUSE_BUTTON_RIGHT)) {
-        self._was_clicked = false
-        self._was_right_clicked = false
+        self.was_clicked = false
+        self.was_right_clicked = false
       } else {
-        self._was_right_clicked = false
+        self.was_right_clicked = false
       }
     } else {
-      self._mouse_is_hover = false
-      self._was_right_clicked = false
+      self.mouse_is_hover = false
+      self.was_right_clicked = false
       if ui.IsMouseButtonDown(ray.MOUSE_BUTTON_LEFT) or ui.IsMouseButtonDown(ray.MOUSE_BUTTON_RIGHT) {
         if self.blur_listener self.blur_listener()
-        self._was_activated = false
+        self.was_activated = false
       }
-    }
+    } */
   }
 
   Dispose(ui) {}

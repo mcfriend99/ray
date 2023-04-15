@@ -40,7 +40,7 @@ class Button < Control {
 
     ui.DrawRectangleRec(
       self.bounds, 
-      self._mouse_is_hover ? self.hover_color : self.color
+      self.mouse_is_hover ? self.hover_color : self.color
     )
     ui.DrawTextEx(
       self.font, 

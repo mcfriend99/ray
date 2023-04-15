@@ -16,10 +16,10 @@ class Slider < Progress {
 
     var mousepos = ui.GetMousePosition()
     if ui.CheckCollisionPointRec(mousepos, self.bounds) {
-      self._was_activated = true
+      self.was_activated = true
     }
 
-    if self._was_activated {
+    if self.was_activated {
       if ui.IsMouseButtonDown(ray.MOUSE_BUTTON_LEFT) {
         var mouse_coords = ray.DeVector2(mousepos)
         var x = mouse_coords.x - (self.x + self.padding)
@@ -30,7 +30,7 @@ class Slider < Progress {
         if self.as_int self.value = to_int(self.value)
         if self.on_change self.on_change(self, self.value)
       } else {
-        self._was_activated = false
+        self.was_activated = false
       }
     }
 

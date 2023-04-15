@@ -6,8 +6,8 @@ var _is_osx = os.platform == 'osx'
 
 class Textbox <  Control {
   var _show_children = false
-  var _mouse_is_hover = false
-  var _was_activated = false
+  var mouse_is_hover = false
+  var was_activated = false
   var _frame_counter = 0
 
   # real text data
@@ -49,13 +49,13 @@ class Textbox <  Control {
       self.update_bounds()
     }
   
-    if self._was_activated self._frame_counter++
+    if self.was_activated self._frame_counter++
     else self._frame_counter = 0
   
     var can_blink = ((self._frame_counter / 20) % 2) <= 1
     var can_delete = ((self._frame_counter / 2) % 2) == 0
   
-    if self._was_activated and self.enabled {
+    if self.was_activated and self.enabled {
       # add new typed text
       var key = ui.GetCharPressed()
       while key > 0 {
@@ -91,9 +91,9 @@ class Textbox <  Control {
     }
 
     ui.DrawRectangleRec(self.bounds, self.color)
-    var line_color = self._mouse_is_hover and !self._was_activated ? 
+    var line_color = self.mouse_is_hover and !self.was_activated ? 
       self.hover_border_color : 
-        (self._was_activated ? 
+        (self.was_activated ? 
           self.active_border_color : 
           self.border_color
         )
@@ -106,7 +106,7 @@ class Textbox <  Control {
       chars_shown = self.text
     } else {
       var ratio = self.width/(text_width + (self.padding * 2) + (self.border_width * 2) + 1)
-      if self._was_activated {
+      if self.was_activated {
         var start = (self.text.length() - (ratio * self.text.length()) + 1) // 1
         chars_shown = self.text[start+1,]
         while ray.DeVector2(ui.MeasureTextEx(self.font, chars_shown, self.font_size, 0)).x >= max_width
@@ -130,7 +130,7 @@ class Textbox <  Control {
       self.font_color
     )
 
-    if self._was_activated and can_blink {
+    if self.was_activated and can_blink {
       # Draw the caret
       var current_text_size = ray.DeVector2(
         ui.MeasureTextEx(self.font, chars_shown, self.font_size, 0)
