@@ -16,7 +16,7 @@ class Control {
   var _is_form_active = false
 
   # relation
-  var _parent
+  var ancestor
 
   # public props
   var rect = {}
@@ -56,7 +56,7 @@ class Control {
   get_text() {
     if is_function(self.text)
       return to_string(self.text())
-    return self.text
+    return self.text ? self.text : ''
   }
 
   is_visible() {
@@ -83,17 +83,17 @@ class Control {
     if !width width = self.width
     if !height height = self.height
 
-    if self._parent != nil {
+    if self.ancestor != nil {
       self.bounds = ray.Rectangle(
-        self._parent.rect.x + self.x, 
-        self._parent.rect.y + self.y, 
+        self.ancestor.rect.x + self.x, 
+        self.ancestor.rect.y + self.y, 
         width, 
         height
       )
 
       self.rect = {
-        x: self._parent.rect.x + self.x,
-        y: self._parent.rect.y + self.y,
+        x: self.ancestor.rect.x + self.x,
+        y: self.ancestor.rect.y + self.y,
         width,
         height,
       }
@@ -111,6 +111,20 @@ class Control {
         width,
         height,
       }
+    }
+
+    if self.can_have_child() and self.children {
+      for child in self.children {
+        if !is_function(child) {
+          child.update_bounds()
+        }
+      }
+    }
+  }
+
+  is_child_of(el) {
+    if self.ancestor {
+      return self.ancestor == el or self.ancestor.is_child_of(el)
     }
   }
 

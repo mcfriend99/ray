@@ -12,15 +12,13 @@ class Slider < Progress {
   }
 
   Paint(ui) {
-    var bound = ray.DeRectangle(self.bounds)
-
-    var mousepos = ui.GetMousePosition()
-    if ui.CheckCollisionPointRec(mousepos, self.bounds) {
-      self.was_activated = true
-    }
 
     if self.was_activated {
       if ui.IsMouseButtonDown(ray.MOUSE_BUTTON_LEFT) {
+        var mousepos = ui.GetMousePosition()
+
+        # self.value += ((self.max - self.min) / (self.rect.width - (self.padding * 2))) * ray.DeVector2(ui.GetMouseDelta()).x
+
         var mouse_coords = ray.DeVector2(mousepos)
         var x = mouse_coords.x - (self.x + self.padding)
         self.value = self.min + ((x /  (self.width - (self.padding * 2))) * (self.max - self.min))
@@ -35,6 +33,7 @@ class Slider < Progress {
     }
 
     parent.Paint(ui)
+    var bound = ray.DeRectangle(self.bounds)
     var inner_bound = ray.DeRectangle(self._inner_bounds)
 
     ui.DrawRectangleRec(ray.Rectangle(

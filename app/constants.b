@@ -318,3 +318,20 @@ var TEXTURE_FILTER_TRILINEAR = 2               # Trilinear filtering (linear wit
 var TEXTURE_FILTER_ANISOTROPIC_4X = 3          # Anisotropic filtering 4x
 var TEXTURE_FILTER_ANISOTROPIC_8X = 4          # Anisotropic filtering 8x
 var TEXTURE_FILTER_ANISOTROPIC_16X = 5         # Anisotropic filtering 16x
+
+
+/**
+ * Camera system modes
+ */
+var CAMERA_CUSTOM = 0           # Custom camera
+var CAMERA_FREE = 1             # Free camera
+var CAMERA_ORBITAL = 2          # Orbital camera
+var CAMERA_FIRST_PERSON = 3     # First person camera
+var CAMERA_THIRD_PERSON = 4     # Third person camera
+
+
+/**
+ * Camera projection
+ */
+var CAMERA_PERSPECTIVE = 0         # Perspective projection
+var CAMERA_ORTHOGRAPHIC = 1        # Orthographic projection

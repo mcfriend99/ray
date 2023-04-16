@@ -10,6 +10,7 @@ class Form < Control {
   var _el_id = 0
   var _active_id = -1
   var _child_list = []
+  var _locked_to = nil
 
   Form(ui, options) {
     parent(options)
@@ -33,18 +34,22 @@ class Form < Control {
     mousepos_coords.x -= el.rect.x
     mousepos_coords.y -= el.rect.y
 
-    if !el.mouse_is_hover and el.mouse_over_listener 
+    if !el.mouse_is_hover and el.mouse_over_listener {
       self.mouse_over_listener(el, mousepos_coords)
-      el.mouse_is_hover = true
+    }
+    
+    el.mouse_is_hover = true
     if ui.IsMouseButtonDown(ray.MOUSE_BUTTON_LEFT) {
-      if !el.was_clicked and el.click_listener 
+      if !el.was_clicked and el.click_listener {
         el.click_listener(el, mousepos_coords)
+      }
       el.was_clicked = true
       el.was_activated = true
       el.was_right_clicked = false
     } else if(ui.IsMouseButtonDown(ray.MOUSE_BUTTON_RIGHT)) {
-      if !el.was_right_clicked and el.context_listener 
+      if !el.was_right_clicked and el.context_listener {
         el.context_listener(el, mousepos_coords)
+      }
       el.was_right_clicked = true
     } else if(ui.IsMouseButtonUp(ray.MOUSE_BUTTON_LEFT)) {
       el.was_clicked = false
@@ -60,28 +65,40 @@ class Form < Control {
     if el != self {
       self._child_list.append(el)
       el.id = self._el_id++
+      el.form = self
     }
 
     var active_found = false
     ui.BeginScissorMode(el.rect.x, el.rect.y, el.rect.width, el.rect.height)
-    if !el.can_have_child() return active_found
+    if !el.can_have_child() {
+      return active_found
+    }
 
     for child in el.children {
-      if is_function(child) child = child()
+      if is_function(child) {
+        child = child()
+      }
+
       if child != nil {
-        if !instance_of(child, Control)
+        if !instance_of(child, Control) {
           die Exception('invalid control in UI')
-        if !reflect.has_prop(child, 'font') {
+        } else if !reflect.has_prop(child, 'font') {
           child.font = self.font
         }
 
+        child.form = self
         if child.is_visible() {
-          child._parent = el
+          child.ancestor = el
           self._child_list.append(child)
           child.id = self._el_id++
 
+          if self._locked_to == child {
+            # paint the background blur
+            ui.DrawRectangleRec(self.bounds, ui.Fade(ray.BLACK, 0.3))
+          }
+
           child.update_bounds()
-          child.Paint(self.ui)
+          child.Paint(ui)
 
           if child.children {
             self._Paint(ui, child, mousepos)
@@ -92,6 +109,18 @@ class Form < Control {
 
     ui.EndScissorMode()
     return active_found
+  }
+
+  lock(el) {
+    self._locked_to = el
+  }
+
+  locked_to(el) {
+    return !self._locked_to or self._locked_to == el
+  }
+
+  unlock() {
+    self._locked_to = false
   }
 
   Paint() {
@@ -115,11 +144,14 @@ class Form < Control {
     # coordinates within the form.
     self.x = 0
     self.y = 0
-    self.update_bounds()
 
     while !self.ui.WindowShouldClose() {
       self._el_id = -1
       self._child_list.clear()
+
+      self.width = self.ui.GetRenderWidth()
+      self.height = self.ui.GetRenderHeight()
+      self.update_bounds()
 
       self.ui.BeginDrawing()
       {
@@ -133,6 +165,12 @@ class Form < Control {
           var child = self._child_list[i]
 
           if !form_active_found and self.ui.CheckCollisionPointRec(mousepos, child.bounds) {
+            if self._locked_to {
+              if child != self._locked_to and !child.is_child_of(self._locked_to) {
+                continue
+              }
+            }
+
             form_active_found = true
             self._handle_mouse_events(self.ui, child, mousepos)
             self.ui.SetMouseCursor(child.cursor)
@@ -140,8 +178,10 @@ class Form < Control {
             child.mouse_is_hover = false
             child.was_right_clicked = false
             if self.ui.IsMouseButtonDown(ray.MOUSE_BUTTON_LEFT) or self.ui.IsMouseButtonDown(ray.MOUSE_BUTTON_RIGHT) {
-              if child.blur_listener and child.was_activated child.blur_listener()
-                child.was_activated = false
+              if child.blur_listener and child.was_activated {
+                child.blur_listener()
+              }
+              child.was_activated = false
             }
           }
         }
@@ -150,7 +190,9 @@ class Form < Control {
           self.ui.SetMouseCursor(self._default_cursor)
           if(self.ui.IsMouseButtonDown(ray.MOUSE_BUTTON_RIGHT)) {
             var mousepos_coords = ray.DeVector2(mousepos)
-            if self.context_listener self.context_listener(self, mousepos_coords)
+            if self.context_listener {
+              self.context_listener(self, mousepos_coords)
+            }
           }
         }
       }

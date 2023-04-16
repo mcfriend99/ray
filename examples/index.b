@@ -59,7 +59,7 @@ var f = Form(ui, {
       return name.text.length() > 0 ? Progress({
         x: 265,
         y: 250,
-        height: 8,
+        # height: 8,
         width: 265,
         value: name.text.length() < 100 ? name.text.length() : 100,
         # indeterminate: true,
@@ -92,6 +92,7 @@ var f = Form(ui, {
           x: 0,
           y: 0,
           text: 'Ok',
+          height: 100,
           on_click: @(s,e) { echo e },
         }),
       ]
@@ -104,8 +105,9 @@ var f = Form(ui, {
       src: 'icon.png',
     }),
     Message({
-      text: 'It works',
-      visible: @(){ return show_message }
+      text: @(){ return 'You say: ' + name.text },
+      visible: @(){ return show_message },
+      on_close: @(){ show_message = false }
     }),
   ]
 })
