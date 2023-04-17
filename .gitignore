@@ -10,7 +10,6 @@
 # c object files (for C extensions)
 *.o
 *.ko
-*.obj
 *.elf
 
 # log files
