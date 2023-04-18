@@ -1,5 +1,6 @@
 import ..app { * }
 import reflect
+import os
 
 var GLSL_VERSION = 330
 var SCREEN_WIDTH = 800
@@ -31,7 +32,7 @@ var position = Vector3(0, 0, 0)
 var model = ui.LoadModel(os.join_paths(os.dir_name(os.current_file()), 'resources', 'models', 'church.obj'))
 var texture = ui.LoadTexture(os.join_paths(os.dir_name(os.current_file()), 'resources', 'models', 'church_diffuse.png'))
 ui.SetMaterialTexture(
-  reflect.ptr_from_address(DeModel(model).materials), 
+  DeModel(model).materials, 
   MATERIAL_MAP_DIFFUSE, 
   texture
 )

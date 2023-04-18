@@ -86,7 +86,14 @@ var _Image = struct(
   int    # format
 )
 def DeImage(v) {
-  return st.unpack('${_ptr_type}data/iwidth/iheight/imipmaps/iformat', v)
+  var res = st.unpack('${_ptr_type}data/iwidth/iheight/imipmaps/iformat', v)
+  return {
+    data: reflect.ptr_from_address(res.data),
+    width: res.width,
+    height: res.height,
+    mipmaps: res.mipmaps,
+    format: res.format,
+  }
 }
 
 var _Texture = struct(
@@ -205,8 +212,8 @@ def DeFont(v) {
       mipmaps: res.mipmaps,
       format: res.format,
     },
-    recs: res.recs,
-    glyphs: res.glyphs,
+    recs: reflect.ptr_from_address(res.recs),
+    glyphs: reflect.ptr_from_address(res.glyphs),
   }
 }
 
@@ -285,13 +292,26 @@ var _Mesh = struct(
   ptr   # vboId    
 )
 def DeMesh(v) {
-  return st.unpack(
+  var res = st.unpack(
     'ivertexCount/itriangleCount/${_ptr_type}vertices'+
     '/${_ptr_type}texcoords/${_ptr_type}texcoords2'+
     '/${_ptr_type}normals/${_ptr_type}tangents/${_ptr_type}colors'+
     '/${_ptr_type}indices/${_ptr_type}animVertices'+
     '/${_ptr_type}animNormals/${_ptr_type}boneIds/${_ptr_type}boneWeights'+
     '/IvaoId/${_ptr_type}vboId', v)
+
+    res['vertices'] = reflect.ptr_from_address(res.vertices)
+    res['texcoords'] = reflect.ptr_from_address(res.texcoords)
+    res['texcoords2'] = reflect.ptr_from_address(res.texcoords2)
+    res['normals'] = reflect.ptr_from_address(res.normals)
+    res['tangents'] = reflect.ptr_from_address(res.tangents)
+    res['colors'] = reflect.ptr_from_address(res.colors)
+    res['indices'] = reflect.ptr_from_address(res.indices)
+    res['animVertices'] = reflect.ptr_from_address(res.animVertices)
+    res['boneIds'] = reflect.ptr_from_address(res.boneIds)
+    res['boneWeights'] = reflect.ptr_from_address(res.boneWeights)
+
+    return res
 }
 
 var _Shader = struct(
@@ -299,7 +319,9 @@ var _Shader = struct(
   ptr      # locs
 )
 def DeShader(v) {
-  return st.unpack('Iid/${_ptr_type}locs', v)
+  var res = st.unpack('Qid/${_ptr_type}locs', v)
+  res['locs'] = reflect.ptr_from_address(res.locs)
+  return res
 }
 
 var _MaterialMap = struct(
@@ -340,13 +362,10 @@ def DeMaterial(v) {
   return {
     shader: {
       id: res.id,
-      locs: res.locs,
+      locs: reflect.ptr_from_address(res.locs),
     },
-    maps: res.maps,
-    params: [
-      res.p1, res.p2, 
-      res.p3, res.p4
-    ],
+    maps: reflect.ptr_from_address(res.maps),
+    params: [res.p1, res.p2, res.p3, res.p4],
   }
 }
 
@@ -431,12 +450,12 @@ def DeModel(v) {
     },
     meshCount: res.meshCount,
     materialCount: res.materialCount,
-    meshes: res.meshes,
-    materials: res.materials,
-    meshMaterial: res.meshMaterial,
+    meshes: reflect.ptr_from_address(res.meshes),
+    materials: reflect.ptr_from_address(res.materials),
+    meshMaterial: reflect.ptr_from_address(res.meshMaterial),
     boneCount: res.boneCount,
-    bones: res.bones,
-    bindPose: res.bindPose,
+    bones: reflect.ptr_from_address(res.bones),
+    bindPose: reflect.ptr_from_address(res.bindPose),
   }
 }
 
@@ -447,7 +466,10 @@ var _ModelAnimation = struct(
   ptr   # framePoses
 )
 def DeModelAnimation(v) {
-  return st.unpack('iboneCount/iframeCount/${_ptr_type}bones/${_ptr_types}framePoses', v)
+  var res = st.unpack('iboneCount/iframeCount/${_ptr_type}bones/${_ptr_type}framePoses', v)
+  res['bones'] = reflect.ptr_from_address(res.bones)
+  res['framePoses'] = reflect.ptr_from_address(res.framePoses)
+  return res
 }
 
 var _Ray = struct(
@@ -755,6 +777,14 @@ var BLANK = Color(0, 0, 0, 0) # Blank (Transparent)
 var TRANSPARENT = BLANK
 var MAGENTA = Color(255, 0, 255, 255) # Magenta
 var RAYWHITE = Color(245, 245, 245, 255) # My own White (raylib logo)
+
+
+# -----------------------------------------------------
+# DEFINITIONS
+# -----------------------------------------------------
+var PI = 3.14159265358979323846
+var DEG2RAD = PI/180
+var RAD2DEG = 180/PI
 
 
 /**
