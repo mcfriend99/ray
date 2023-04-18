@@ -10,7 +10,7 @@ var resource_dir = os.join_paths(os.dir_name(os.current_file()), 'resources')
 
 var ui = Init()
 
-ui.SetConfigFlags(FLAG_MSAA_4X_HINT)
+ui.SetConfigFlags(FLAG_MSAA_4X_HINT | FLAG_FULLSCREEN_MODE)
 ui.InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, 'Scarfy')
 
 var background = ui.LoadTexture(os.join_paths(resource_dir, 'cyberpunk_street_background.png'))
@@ -28,7 +28,7 @@ var frame_rec = Rectangle(0, 0, _scarfy.width / 6, _scarfy.height)
 
 var scrolling_back = 0, scrolling_mid = 0, scrolling_fore = 0
 var current_frame = 0, frame_speed = 8, frame_counter = 0
-var x_pos = 0, y_pos = 270
+var x_pos = 0, y_pos = 435
 var max_x = SCREEN_WIDTH - (_scarfy.width / 6)
 var min_y = (SCREEN_HEIGHT - _background.height) / 2
 var flipped = false
