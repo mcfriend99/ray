@@ -14,6 +14,7 @@ var ui = Init()
 ui.SetConfigFlags(FLAG_MSAA_4X_HINT | FLAG_FULLSCREEN_MODE)
 ui.InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, 'Scarfy')
 ui.InitAudioDevice()
+ui.DisableCursor()
 
 var jump_sound = ui.LoadSound(os.join_paths(resource_dir, 'jump.wav'))
 var font = ui.GetFontDefault()
@@ -36,7 +37,7 @@ var position = Vector2(0, 435)
 var frame_rec = Rectangle(0, 0, scarfy_width, _scarfy.height)
 
 var page = 0
-var game_time = 30
+var game_time = to_int(rand(90, 300))
 
 var enter_text = 'Press ENTER to start'
 var enter2_text = 'Press ENTER to restart'
@@ -216,56 +217,19 @@ while !ui.WindowShouldClose() {
   using page {
     when 0 { # splash and home
       ui.ClearBackground(WHITE)
-      ui.DrawTextureRec(scarfy, frame_rec, Vector2(
-        (SCREEN_WIDTH - scarfy_width) / 2,
-        (SCREEN_HEIGHT - _scarfy.height) / 2
-      ), WHITE)
-      ui.DrawRectangle(
-        0,
-        (((SCREEN_HEIGHT - _scarfy.height) / 2) + _scarfy.height) - 15,
-        SCREEN_WIDTH,
-        20,
-        WHITE
-      )
+      ui.DrawTextureRec(scarfy, frame_rec, Vector2((SCREEN_WIDTH - scarfy_width) / 2, (SCREEN_HEIGHT - _scarfy.height) / 2), WHITE)
+      ui.DrawRectangle(0, (((SCREEN_HEIGHT - _scarfy.height) / 2) + _scarfy.height) - 15, SCREEN_WIDTH, 20, WHITE)
+
       if frame_counter > 120 {
-        ui.DrawTextEx(
-          font,
-          'SCARFY', 
-          Vector2(
-            (SCREEN_WIDTH - scarfy_name_size.x) / 2,
-            (((SCREEN_HEIGHT - _scarfy.height) / 2) + _scarfy.height) + 10
-          ),
-          30,
-          5,
-          DARKBLUE
-        )
-        ui.DrawTextEx(
-          font,
-          game_instruction, 
-          Vector2(
-            (SCREEN_WIDTH - instruction_size.x) / 2,
-            (((SCREEN_HEIGHT - _scarfy.height) / 2) + _scarfy.height) + 50
-          ),
-          12,
-          2,
-          DARKGRAY
-        )
-        ui.DrawTextEx(
-          font,
-          enter_text, 
-          Vector2(
-            (SCREEN_WIDTH - enter_ins_size.x) / 2,
-            (((SCREEN_HEIGHT - _scarfy.height) / 2) + _scarfy.height) + 100
-          ),
-          16,
-          2,
-          DARKGRAY
-        )
+        ui.DrawTextEx(font, 'SCARFY', Vector2((SCREEN_WIDTH - scarfy_name_size.x) / 2, (((SCREEN_HEIGHT - _scarfy.height) / 2) + _scarfy.height) + 10), 30, 5, DARKBLUE)
+        ui.DrawTextEx(font, game_instruction, Vector2((SCREEN_WIDTH - instruction_size.x) / 2, (((SCREEN_HEIGHT - _scarfy.height) / 2) + _scarfy.height) + 50), 12, 2, DARKGRAY)
+        ui.DrawTextEx(font, enter_text, Vector2((SCREEN_WIDTH - enter_ins_size.x) / 2, (((SCREEN_HEIGHT - _scarfy.height) / 2) + _scarfy.height) + 100), 16, 2, DARKGRAY)
 
         if ui.IsKeyPressed(KEY_ENTER) {
           frame_counter = 0
           global_counter = 0
           page++
+          ui.PlaySound(jump_sound)
         }
       }
 
@@ -295,29 +259,9 @@ while !ui.WindowShouldClose() {
         ui.DrawTextEx(font, game_over_text, Vector2(_game_over_rec.x + 30, _game_over_rec.y + 30), 80, 10, WHITE)
         
         var score_size = DeVector2(ui.MeasureTextEx(font, 'Score: ${score}', 30, 5))
-        ui.DrawTextEx(
-          font,
-          'Score: ${score}',
-          Vector2(
-            _game_over_rec.x + 30 + ((_game_over_rec.x + 60 - score_size.x) / 2), 
-            _game_over_rec.y + 110
-          ),
-          30,
-          5,
-          ORANGE
-        )
+        ui.DrawTextEx(font, 'Score: ${score}', Vector2(_game_over_rec.x + 30 + ((_game_over_rec.x + 60 - score_size.x) / 2), _game_over_rec.y + 110), 30, 5, ORANGE)
 
-        ui.DrawTextEx(
-          font,
-          enter2_text,
-          Vector2(
-            _game_over_rec.x + 30 + ((_game_over_rec.x + 60 - enter2_size.x) / 2), 
-            _game_over_rec.y + 155
-          ),
-          16,
-          5,
-          LIGHTGRAY
-        )
+        ui.DrawTextEx(font, enter2_text, Vector2(_game_over_rec.x + 30 + ((_game_over_rec.x + 60 - enter2_size.x) / 2), _game_over_rec.y + 155), 16, 5, LIGHTGRAY)
 
         if ui.IsKeyPressed(KEY_ENTER) {
           global_counter = 0
@@ -325,6 +269,7 @@ while !ui.WindowShouldClose() {
           score = 0
           x_pos = 0
           y_pos = 435
+          ui.PlaySound(jump_sound)
         }
       } else {
         ui.DrawText('Score: ${score}', 10, 0, 20, ORANGE)
@@ -334,6 +279,9 @@ while !ui.WindowShouldClose() {
   ui.EndDrawing()
 }
 
+ui.UnloadSound(jump_sound)
+ui.UnloadTexture(coin)
+ui.UnloadTexture(scarfy)
 ui.UnloadTexture(background)
 ui.UnloadTexture(midground)
 ui.UnloadTexture(foreground)
