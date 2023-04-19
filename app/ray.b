@@ -310,6 +310,8 @@ def DeMesh(v) {
     res['animVertices'] = reflect.ptr_from_address(res.animVertices)
     res['boneIds'] = reflect.ptr_from_address(res.boneIds)
     res['boneWeights'] = reflect.ptr_from_address(res.boneWeights)
+    res['vaoId'] = reflect.ptr_from_address(res.vaoId)
+    res['vboId'] = reflect.ptr_from_address(res.vboId)
 
     return res
 }
@@ -536,6 +538,74 @@ def DeBoundingBox(v) {
   }
 }
 
+var _Wave = struct(
+  uint,   # frameCount
+  uint,   # sampleRate
+  uint,   # sampleSize
+  uint,   # channels
+  ptr     # data
+)
+def DeWave(v) {
+  var res = st.unpack('IframeCount/IsampleRate/IsampleSize/Ichannels/${_ptr_type}data', v)
+  res['data'] = reflect.ptr_from_address(res.data)
+  return res
+}
+
+var _AudioStream = struct(
+  ptr,    # buffer
+  ptr,    # processor
+  uint,   # sampleRate
+  uint,   # sampleSize
+  uint   # channels
+)
+def DeAudioStream(v) {
+  var res = st.unpack('${_ptr_type}buffer/${_ptr_type}processor/IsampleRate/IsampleSize/Ichannels', v)
+  res['buffer'] = reflect.ptr_from_address(res.buffer)
+  res['processor'] = reflect.ptr_from_address(res.processor)
+  return res
+}
+
+var _Sound = struct(
+  _AudioStream, # stream
+  uint          # frameCount
+)
+def DeSound(v) {
+  var res = st.unpack('${_ptr_type}buffer/${_ptr_type}processor/IsampleRate/IsampleSize/Ichannels/IframeCount', v)
+  return {
+    stream: {
+      buffer: reflect.ptr_from_address(res.buffer),
+      processor: reflect.ptr_from_address(res.processor),
+      sampleRate: res.sampleRate,
+      sampleSize: res.sampleSize,
+      channels: res.channels,
+    },
+    frameCount: res.frameCount,
+  }
+}
+
+var _Music = struct(
+  _AudioStream, # stream
+  uint,         # frameCount
+  bool,         # looping
+  int,          # ctxType
+  ptr          # ctxData
+)
+def DeMusic(v) {
+  var res = st.unpack('${_ptr_type}buffer/${_ptr_type}processor/IsampleRate/IsampleSize/Ichannels/IframeCount/clooping/ictxType/${_ptr_type}ctxData', v)
+  return {
+    stream: {
+      buffer: reflect.ptr_from_address(res.buffer),
+      processor: reflect.ptr_from_address(res.processor),
+      sampleRate: res.sampleRate,
+      sampleSize: res.sampleSize,
+      channels: res.channels,
+    },
+    frameCount: res.frameCount,
+    looping: res.looping,
+    ctxType: res.ctxType,
+    ctxData: reflect.ptr_from_address(res.ctxData),
+  }
+}
 
 # -------------------------------------------------------------
 # DECLARATIONS
@@ -655,24 +725,24 @@ def Mesh(
     'i2${_ptr_type}11I${_ptr_type}', 
     vertexCount, 
     triangleCount, 
-    vertices, 
-    texcoords, 
-    texcoords2, 
-    normals, 
-    tangents, 
-    colors, 
-    indices, 
-    animVertices, 
-    animNormals, 
-    boneIds, 
-    boneWeights, 
+    reflect.get_address(vertices), 
+    reflect.get_address(texcoords), 
+    reflect.get_address(texcoords2), 
+    reflect.get_address(normals), 
+    reflect.get_address(tangents), 
+    reflect.get_address(colors), 
+    reflect.get_address(indices), 
+    reflect.get_address(animVertices), 
+    reflect.get_address(animNormals), 
+    reflect.get_address(boneIds), 
+    reflect.get_address(boneWeights), 
     vaoId, 
-    vboId
+    reflect.get_address(vboId)
   )
 }
 
 def Shader(id, locs) {
-  return st.pack('I${_ptr_type}', id, get_address(locs))
+  return st.pack('I${_ptr_type}', id, reflect.get_address(locs))
 }
 
 def MaterialMap(texture, color, value) {
@@ -683,7 +753,7 @@ def Material(shader, maps, params) {
   if !is_list(params) params = to_list(params)
   if params.length() < 4 
     params.extend([0] * (4 - params.length()))
-  return st.pack('C${shader.length()}${_ptr_type}f4', shader, maps, params)
+  return st.pack('C${shader.length()}${_ptr_type}f4', shader, reflect.get_address(maps), params)
 }
 
 def float3(floats) {
@@ -722,13 +792,14 @@ def Model(
 ) {
   return st.pack(
     'C${transform.length()}i2${_ptr_type}3i${_ptr_type}2',
-    transform, meshCount, materialCount, meshes, 
-    materials, meshMaterial, boneCount, bones, bindPose
+    transform, meshCount, materialCount, reflect.get_address(meshes), 
+    reflect.get_address(materials), reflect.get_address(meshMaterial), 
+    boneCount, reflect.get_address(bones), reflect.get_address(bindPose)
   )
 }
 
 def ModelAnimation(boneCount, frameCount, bones, framePoses) {
-  return st.pack('i2${_ptr_type}2', boneCount, frameCount, bones, framePoses)
+  return st.pack('i2${_ptr_type}2', boneCount, frameCount, reflect.get_address(bones), reflect.get_address(framePoses))
 }
 
 def Ray(position, direction) {
@@ -742,6 +813,23 @@ def RayCollision(hit, distance, point, normal) {
 def BoundingBox(min, max) {
   return st.pack('C${min.length()}C${max.length()}', min, max)
 }
+
+def Wave(frameCount, sampleRate, sampleSize, channels, data) {
+  return st.pack('I4${_ptr_type}', frameCount, sampleRate, sampleSize, channels, reflect.get_address(data))
+}
+
+def AudioStream(buffer, processor, sampleRate, sampleSize, channels) {
+  return st.pack('${_ptr_type}2I3', reflect.get_address(buffer), reflect.get_address(processor), sampleRate, sampleSize, channels)
+}
+
+def Sound(stream, frameCount) {
+  return st.pack('C${stream.length()}I', stream, frameCount)
+}
+
+def Music(stream, frameCount, looping, ctxType, ctxData) {
+  return st.pack('C${stream.length()}Ici${_ptr_type}', stream, frameCount, looping, ctxType, reflect.get_address(ctxData))
+}
+
 
 # ---------------------------------------------------------
 # COLORS
@@ -1043,7 +1131,7 @@ def Init(debug) {
     DrawLineBezierQuad: ray.define('DrawLineBezierQuad', void, _Vector2, _Vector2, _Vector2, float, _Color),
     DrawLineBezierCubic: ray.define('DrawLineBezierCubic', void, _Vector2, _Vector2, _Vector2, _Vector2, float, _Color),
     DrawLineStrip: ray.define('DrawLineStrip', void, _Vector2, int, _Color),
-    DrawCircle: ray.define('DrawCircle', void, int, int, int, _Color),
+    DrawCircle: ray.define('DrawCircle', void, int, int, float, _Color),
     DrawCircleSector: ray.define('DrawCircleSector', void, _Vector2, float, float, float, int, _Color),
     DrawCircleSectorLines: ray.define('DrawCircleSectorLines', void, _Vector2, float, float, float, int, _Color),
     DrawCircleGradient: ray.define('DrawCircleGradient', void, int, int, float, _Color, _Color),
@@ -1360,6 +1448,78 @@ def Init(debug) {
     GetRayCollisionQuad: ray.define('GetRayCollisionQuad', _RayCollision, _Ray, _Vector3, _Vector3, _Vector3, _Vector3),    #  Get collision info between ray and quad
 
     # ----------------------------------------------------------------
+    # AUDIO
+    # ----------------------------------------------------------------
+    # Audio device management functions
+    InitAudioDevice: ray.define('InitAudioDevice', void),                                     # Initialize audio device and context
+    CloseAudioDevice: ray.define('CloseAudioDevice', void),                                    # Close the audio device and context
+    IsAudioDeviceReady: ray.define('IsAudioDeviceReady', bool),                                  # Check if audio device has been initialized successfully
+    SetMasterVolume: ray.define('SetMasterVolume', void, float),                             # Set master volume (listener)
+
+    # Wave/Sound loading/unloading functions
+    LoadWave: ray.define('LoadWave', _Wave, char_ptr),                            # Load wave data from file
+    LoadWaveFromMemory: ray.define('LoadWaveFromMemory', _Wave, char_ptr, uchar_ptr, int), # Load wave from memory, fileType refers to extension: i.e. '.wav'
+    IsWaveReady: ray.define('IsWaveReady', bool, _Wave),                                    # Checks if wave data is ready
+    LoadSound: ray.define('LoadSound', _Sound, char_ptr),                          # Load sound from file
+    LoadSoundFromWave: ray.define('LoadSoundFromWave', _Sound, _Wave),                             # Load sound from wave data
+    IsSoundReady: ray.define('IsSoundReady', bool, _Sound),                                 # Checks if a sound is ready
+    UpdateSound: ray.define('UpdateSound', void, _Sound, ptr, int), # Update sound buffer with new data
+    UnloadWave: ray.define('UnloadWave', void, _Wave),                                     # Unload wave data
+    UnloadSound: ray.define('UnloadSound', void, _Sound),                                  # Unload sound
+    ExportWave: ray.define('ExportWave', bool, _Wave, char_ptr),               # Export wave data to, returns true on success
+    ExportWaveAsCode: ray.define('ExportWaveAsCode', bool, _Wave, char_ptr),         # Export wave sample data to code (.h), returns true on success
+
+    # Wave/Sound management functions
+    PlaySound: ray.define('PlaySound', void, _Sound),                                    # Play a sound
+    StopSound: ray.define('StopSound', void, _Sound),                                    # Stop playing a sound
+    PauseSound: ray.define('PauseSound', void, _Sound),                                   # Pause a sound
+    ResumeSound: ray.define('ResumeSound', void, _Sound),                                  # Resume a paused sound
+    IsSoundPlaying: ray.define('IsSoundPlaying', bool, _Sound),                               # Check if a sound is currently playing
+    SetSoundVolume: ray.define('SetSoundVolume', void, _Sound, float),                 # Set volume for a sound (1.0 is max)
+    SetSoundPitch: ray.define('SetSoundPitch', void, _Sound, float),                   # Set pitch for a sound (1.0 is base)
+    SetSoundPan: ray.define('SetSoundPan', void, _Sound, float),                       # Set pan for a sound (0.5 is)
+    WaveCopy: ray.define('WaveCopy', _Wave, _Wave),                                       # Copy a wave to a new wave
+    WaveCrop: ray.define('WaveCrop', void, ptr, int, int),     # Crop a wave to defined samples range
+    WaveFormat: ray.define('WaveFormat', void, ptr, int, int, int), # Convert wave data to desired format
+    LoadWaveSamples: ray.define('LoadWaveSamples', ptr, _Wave),                              # Load samples data from wave as a 32bit float data array
+    UnloadWaveSamples: ray.define('UnloadWaveSamples', void, ptr),                         # Unload samples data loaded LoadWaveSamples: ray.define('LoadWaveSamples', with, )
+
+    # Music management functions
+    LoadMusicStream: ray.define('LoadMusicStream', _Music, char_ptr),                    # Load music stream from file
+    LoadMusicStreamFromMemory: ray.define('LoadMusicStreamFromMemory', _Music, char_ptr, uchar_ptr, int), # Load music stream from data
+    IsMusicReady: ray.define('IsMusicReady', bool, _Music),                                 # Checks if a music stream is ready
+    UnloadMusicStream: ray.define('UnloadMusicStream', void, _Music),                            # Unload music stream
+    PlayMusicStream: ray.define('PlayMusicStream', void, _Music),                              # Start music playing
+    IsMusicStreamPlaying: ray.define('IsMusicStreamPlaying', bool, _Music),                         # Check if music is playing
+    UpdateMusicStream: ray.define('UpdateMusicStream', void, _Music),                            # Updates buffers for music streaming
+    StopMusicStream: ray.define('StopMusicStream', void, _Music),                              # Stop music playing
+    PauseMusicStream: ray.define('PauseMusicStream', void, _Music),                             # Pause music playing
+    ResumeMusicStream: ray.define('ResumeMusicStream', void, _Music),                            # Resume playing paused music
+    SeekMusicStream: ray.define('SeekMusicStream', void, _Music, float),              # Seek music to a position (in)
+    SetMusicVolume: ray.define('SetMusicVolume', void, _Music, float),                 # Set volume for music (1.0 is max)
+    SetMusicPitch: ray.define('SetMusicPitch', void, _Music, float),                   # Set pitch for a music (1.0 is base)
+    SetMusicPan: ray.define('SetMusicPan', void, _Music, float),                       # Set pan for a music (0.5 is)
+    GetMusicTimeLength: ray.define('GetMusicTimeLength', float, _Music),                          # Get music time length (in)
+    GetMusicTimePlayed: ray.define('GetMusicTimePlayed', float, _Music),                          # Get current music time played (in)
+
+    # AudioStream management functions
+    LoadAudioStream: ray.define('LoadAudioStream', _AudioStream, uint, uint, uint), # Load audio stream (to stream raw audio pcm)
+    IsAudioStreamReady: ray.define('IsAudioStreamReady', bool, _AudioStream),                    # Checks if an audio stream is ready
+    UnloadAudioStream: ray.define('UnloadAudioStream', void, _AudioStream),                     # Unload audio stream and free memory
+    UpdateAudioStream: ray.define('UpdateAudioStream', void, _AudioStream, ptr, int), # Update audio stream buffers with data
+    IsAudioStreamProcessed: ray.define('IsAudioStreamProcessed', bool, _AudioStream),                # Check if any audio stream buffers requires refill
+    PlayAudioStream: ray.define('PlayAudioStream', void, _AudioStream),                       # Play audio stream
+    PauseAudioStream: ray.define('PauseAudioStream', void, _AudioStream),                      # Pause audio stream
+    ResumeAudioStream: ray.define('ResumeAudioStream', void, _AudioStream),                     # Resume audio stream
+    IsAudioStreamPlaying: ray.define('IsAudioStreamPlaying', bool, _AudioStream),                  # Check if audio stream is playing
+    StopAudioStream: ray.define('StopAudioStream', void, _AudioStream),                       # Stop audio stream
+    SetAudioStreamVolume: ray.define('SetAudioStreamVolume', void, _AudioStream, float),    # Set volume for audio stream (1.0 is max)
+    SetAudioStreamPitch: ray.define('SetAudioStreamPitch', void, _AudioStream, float),      # Set pitch for audio stream (1.0 is base)
+    SetAudioStreamPan: ray.define('SetAudioStreamPan', void, _AudioStream, float),          # Set pan for audio stream (0.5 is)
+    SetAudioStreamBufferSizeDefault: ray.define('SetAudioStreamBufferSizeDefault', void, int),                 # Default size for new audio streams
+
+
+    # ----------------------------------------------------------------
     # Math functions (raymath.h)
     # ----------------------------------------------------------------
     math: {
@@ -1398,8 +1558,8 @@ def Init(debug) {
       Vector2ClampValue: ray.define('Vector2ClampValue', _Vector2, _Vector2, float, float),
       Vector2Equals: ray.define('Vector2Equals', int, _Vector2, _Vector2),
       # Vector3 math
-      Vector3Zero: ray.define('Vector3Zero', _Vector3, void),
-      Vector3One: ray.define('Vector3One', _Vector3, void),
+      Vector3Zero: ray.define('Vector3Zero', _Vector3),
+      Vector3One: ray.define('Vector3One', _Vector3),
       Vector3Add: ray.define('Vector3Add', _Vector3, _Vector3, _Vector3),
       Vector3AddValue: ray.define('Vector3AddValue', _Vector3, _Vector3, float),
       Vector3Subtract: ray.define('Vector3Subtract', _Vector3, _Vector3, _Vector3),

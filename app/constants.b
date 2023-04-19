@@ -335,3 +335,24 @@ var CAMERA_THIRD_PERSON = 4     # Third person camera
  */
 var CAMERA_PERSPECTIVE = 0         # Perspective projection
 var CAMERA_ORTHOGRAPHIC = 1        # Orthographic projection
+
+
+/**
+ * Music context type
+ */
+var MUSIC_AUDIO_NONE = 0       # No audio context loaded
+var MUSIC_AUDIO_WAV = 1        # WAV audio context
+var MUSIC_AUDIO_OGG = 2        # OGG audio context
+var MUSIC_AUDIO_FLAC = 3       # FLAC audio context
+var MUSIC_AUDIO_MP3 = 4        # MP3 audio context
+var MUSIC_AUDIO_QOA = 5        # QOA audio context
+var MUSIC_MODULE_XM = 6        # XM module audio context
+var MUSIC_MODULE_MOD = 7       # MOD module audio context
+
+
+/**
+ * Audo buffer kind
+ */
+var AUDIO_BUFFER_USAGE_STATIC = 0
+var AUDIO_BUFFER_USAGE_STREAM = 1
+

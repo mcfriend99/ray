@@ -1,6 +1,7 @@
 import ..app { * }
 import reflect
 import os
+import iters
 
 var GLSL_VERSION = 330
 var SCREEN_WIDTH = 1280
@@ -12,6 +13,9 @@ var ui = Init()
 
 ui.SetConfigFlags(FLAG_MSAA_4X_HINT | FLAG_FULLSCREEN_MODE)
 ui.InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, 'Scarfy')
+ui.InitAudioDevice()
+
+var jump_sound = ui.LoadSound(os.join_paths(resource_dir, 'jump.wav'))
 
 var background = ui.LoadTexture(os.join_paths(resource_dir, 'cyberpunk_street_background.png'))
 var _background = DeTexture(background)
@@ -21,27 +25,115 @@ var foreground = ui.LoadTexture(os.join_paths(resource_dir, 'cyberpunk_street_fo
 var _foreground = DeTexture(foreground)
 
 var scarfy = ui.LoadTexture(os.join_paths(resource_dir, 'scarfy.png'))
+var coin = ui.LoadTexture(os.join_paths(resource_dir, 'coin-big.png'))
 var _scarfy = DeTexture(scarfy)
+var _coin = DeTexture(coin)
+var coin_width = _coin.width / 6
+var scarfy_width = _scarfy.width / 6
 
 var position = Vector2(0, 435)
-var frame_rec = Rectangle(0, 0, _scarfy.width / 6, _scarfy.height)
+var frame_rec = Rectangle(0, 0, scarfy_width, _scarfy.height)
 
 var scrolling_back = 0, scrolling_mid = 0, scrolling_fore = 0
 var current_frame = 0, frame_speed = 8, frame_counter = 0
+var global_counter = 0
 var x_pos = 0, y_pos = 435
-var max_x = SCREEN_WIDTH - (_scarfy.width / 6)
-var min_y = (SCREEN_HEIGHT - _background.height) / 2
+var max_x = SCREEN_WIDTH - (scarfy_width)
+var min_y = 20
 var flipped = false
+var score = 0
+
+class Coin {
+  Coin(x, y) {
+    self.x = x
+    self.y = y
+    self._x = 0
+  }
+
+  update(current_frame) {
+    self._x = current_frame * coin_width
+  }
+
+  draw(ui) {
+    ui.DrawTextureRec(
+      coin, 
+      Rectangle(self._x, 0, coin_width, _coin.height), 
+      Vector2(self.x, self.y), 
+      WHITE
+    )
+  }
+}
+
+class CoinBucket {
+  var _coins = []
+  var _count = 3
+  var _duration = 300
+
+  CoinBucket(ui) {
+    self.ui = ui
+  }
+
+  populate() {
+    if self._coins.is_empty() {
+      self._count++
+      for i in 0..(self._count) {
+        self._coins.append(Coin(
+          rand(SCREEN_WIDTH - coin_width),
+          rand(20, SCREEN_HEIGHT - 60)
+        ))
+      }
+      if self._count == 10 self._count = 2
+    }
+  }
+
+  update(current_frame, frame_count, scarfy_rec) {
+    if frame_count % self._duration == 0 {
+      self.clear()
+      self._duration -= 20
+      if self._duration < 150 self._duration = 300
+      return
+    }
+    
+    iters.each(self._coins, @(x, i) {
+      if self.ui.CheckCollisionRecs(
+        Rectangle(x_pos, y_pos, scarfy_width, _scarfy.height), 
+        Rectangle(x.x, x.y, coin_width, _coin.height)
+      ) {
+        self._coins.remove_at(i)
+        score += 5
+        ui.PlaySound(jump_sound)
+      }
+
+      x.update(current_frame)
+    })
+  }
+
+  draw() {
+    iters.each(self._coins, @(x) {
+      x.draw(self.ui)
+    })
+  }
+
+  count() {
+    return self._coins.length()
+  }
+
+  clear() {
+    self._coins.clear()
+  }
+}
 
 ui.SetTargetFPS(60)
 
+var bucket = CoinBucket(ui)
 while !ui.WindowShouldClose() {
+  global_counter++
   frame_counter++
   if !flipped {
     scrolling_back -= 0.1
     scrolling_mid -= 0.5
     scrolling_fore -= 1
-  } else if scrolling_fore != 0  and x_pos <= (_scarfy.width / 2) {
+  } else if scrolling_fore < 0 {
     scrolling_back += 0.1
     scrolling_mid += 0.5
     scrolling_fore += 1
@@ -50,6 +142,8 @@ while !ui.WindowShouldClose() {
   if scrolling_back <= (-_background.width * 3) scrolling_back = 0 
   if scrolling_mid <= (-_midground.width * 3) scrolling_mid = 0 
   if scrolling_fore <= (-_foreground.width * 3) scrolling_fore = 0 
+
+  bucket.populate()
 
   if ui.IsKeyDown(KEY_SPACE) {
     y_pos -= 10
@@ -68,11 +162,12 @@ while !ui.WindowShouldClose() {
     }
 
     frame_rec = Rectangle(
-      current_frame * _scarfy.width / 6,
+      current_frame * scarfy_width,
       _frame_rec.y,
       abs(_frame_rec.width) * (flipped ? -1 : 1),
       _frame_rec.height
     )
+    bucket.update(current_frame, global_counter, frame_rec)
   }
 
   if ui.IsKeyDown(KEY_RIGHT) {
@@ -82,19 +177,18 @@ while !ui.WindowShouldClose() {
     scrolling_back -= 0.1
     scrolling_mid -= 0.5
     scrolling_fore -= 1
-  } else if ui.IsKeyDown(KEY_LEFT) and scrolling_fore != 0 {
+  } else if ui.IsKeyDown(KEY_LEFT) and scrolling_fore < 0 {
     x_pos -= 5
     if x_pos < 0 x_pos = 0 
     flipped = true
-    if x_pos <= (_scarfy.width / 2) {
-      scrolling_back += 0.1
-      scrolling_mid += 0.5
-      scrolling_fore += 1
-    }
+    scrolling_back += 0.1
+    scrolling_mid += 0.5
+    scrolling_fore += 1
   }
 
   ui.BeginDrawing()
     # ui.ClearBackground(ui.GetColor(0x052c46ff))
+    ui.ClearBackground(BLACK)
 
     ui.DrawTextureEx(background, Vector2(scrolling_back, 20), 0, 3, WHITE)
     ui.DrawTextureEx(background, Vector2(_background.width * 3 + scrolling_back, 20), 0, 3, WHITE)
@@ -106,6 +200,9 @@ while !ui.WindowShouldClose() {
     ui.DrawTextureEx(foreground, Vector2(_foreground.width * 3 + scrolling_fore, 20), 0, 3, WHITE)
 
     ui.DrawTextureRec(scarfy, frame_rec, Vector2(x_pos, y_pos), WHITE)
+    bucket.draw()
+
+    ui.DrawText('Score: ${score}', 10, 0, 20, ORANGE)
   ui.EndDrawing()
 }
 
