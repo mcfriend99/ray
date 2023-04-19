@@ -2,6 +2,7 @@ import ..app { * }
 import reflect
 import os
 import clib
+import struct
 
 var GLSL_VERSION = 330
 var SCREEN_WIDTH = 800
@@ -22,7 +23,7 @@ ui.SetTextureFilter(texture, ray.TEXTURE_FILTER_TRILINEAR)
 # Define the camera to look into our 3d world
 var camera = Camera(
   Vector3(5, 5, 5),   # position
-  Vector3(0, 5, 0),   # target
+  Vector3(0, 2, 0),   # target
   Vector3(0, 1, 0),   # up
   45,                     # fovy
   CAMERA_PERSPECTIVE # projection
@@ -35,8 +36,10 @@ var anims_count = 0
 var anim_index = 0
 var anim_current_frame = 0
 
-var model_animation = ui.LoadModelAnimations(animation_file, anims_count)
-echo anims_count
+var counts = struct.pack('i', 0)
+var model_animation = ui.LoadModelAnimations(animation_file, reflect.get_ptr(counts))
+anims_count = struct.unpack('i', counts)[1]
+echo 'Animations in file: ${anims_count}...'
 
 # ui.DisableCursor()
 ui.SetTargetFPS(60)

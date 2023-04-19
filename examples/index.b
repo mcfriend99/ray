@@ -37,17 +37,6 @@ var f = Form(ui, {
           text: 'Maximum of 100 characters.',
         }) : nil
     },
-    /* @() {
-      return name.text.length() > 0 ?
-        Label({
-          x: 325,
-          y: 250,
-          font_size: 20,
-          text: @() {
-            return 'INPUT CHARS: ${name.text.length()}'
-          },
-        }) : nil
-    }, */
     Button({
       x: 470,
       y: 180,
@@ -108,6 +97,13 @@ var f = Form(ui, {
       text: @(){ return 'You say: ' + name.text },
       visible: @(){ return show_message },
       on_close: @(){ show_message = false }
+    }),
+    Checkbox({
+      x: 265,
+      y: 370,
+      text: 'Remember me',
+      font_color: ray.MAROON,
+      check_color: ray.MAROON,
     }),
   ]
 })

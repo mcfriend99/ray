@@ -9,3 +9,4 @@ import .progress { * }
 import .slider { * }
 import .image { * }
 import .message { * }
+import .checkbox { * }
