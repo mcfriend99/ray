@@ -19,7 +19,7 @@ var f = Form(ui, {
   width: 800,
   height: 450,
   title: 'Ray Test Application',
-  color: ray.RAYWHITE,
+  color: RAYWHITE,
   children: [
     Label({
       x: 260,
@@ -102,8 +102,8 @@ var f = Form(ui, {
       x: 265,
       y: 370,
       text: 'Remember me',
-      font_color: ray.MAROON,
-      check_color: ray.MAROON,
+      font_color: MAROON,
+      check_color: MAROON,
     }),
   ]
 })

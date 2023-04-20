@@ -13,9 +13,9 @@ ui.InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, 'Plane Example')
 
 # Create fine tuned font...
 var font = ui.LoadFont(os.join_paths(os.dir_name(os.dir_name(os.current_file())), 'fonts', 'abeezee.ttf'))
-var t1 = ray.DeFont(font).texture
-var texture = ray.Texture2D(t1.id, t1.width, t1.height, t1.mipmaps, t1.format)
-ui.SetTextureFilter(texture, ray.TEXTURE_FILTER_TRILINEAR)
+var t1 = DeFont(font).texture
+var texture = Texture2D(t1.id, t1.width, t1.height, t1.mipmaps, t1.format)
+ui.SetTextureFilter(texture, TEXTURE_FILTER_TRILINEAR)
 
 # Define the camera to look into our 3d world
 var camera = Camera(
