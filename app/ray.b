@@ -15,596 +15,442 @@ var _ptr_type = 'Q'
 # -------------------------------------------------------------
 
 # struct types
-var _Vector2 = struct(
-  float, # x
-  float  # y
-)
+var Vector2Type = named_struct({
+  x: float,
+  y: float,
+})
 def DeVector2(v) {
-  return st.unpack('fx/fy', v)
+  return get(Vector2Type, v)
 }
 
-var _Vector3 = struct(
-  float, # x
-  float, # y
-  float  # z
-)
+var Vector3Type = named_struct({
+  x: float,
+  y: float,
+  z: float,
+})
 def DeVector3(v) {
-  return st.unpack('fx/fy/fz', v)
+  return get(Vector3Type, v)
 }
 
-var _Vector4 = struct(
-  float, # x
-  float, # y
-  float, # z
-  float  # w
-)
+var Vector4Type = named_struct({
+  x: float,
+  y: float,
+  z: float,
+  w: float,
+})
 def DeVector4(v) {
-  return st.unpack('fx/fy/fz/fw', v)
+  return get(Vector4Type, v)
 }
-var _Quaternion = _Vector4
+var QuaternionType = Vector4Type
 var DeQuaternion = DeVector4
 
-var _Matrix = struct(
-  float, float, float, float, # first row
-  float, float, float, float, # second row
-  float, float, float, float, # third row
-  float, float, float, float  # fourth row
-)
+var MatrixType = named_struct({
+  m0: float, m4: float, m8:  float, m12: float,
+  m1: float, m5: float, m9:  float, m13: float,
+  m2: float, m6: float, m10: float, m14: float,
+  m3: float, m7: float, m11: float, m15: float,
+})
 def DeMatrix(v) {
-  st.unpack(
-    'fm0/fm4/fm8/fm12' +
-    '/fm1/fm5/fm9/fm13' +
-    '/fm2/fm6/fm10/fm14' +
-    '/fm3/fm7/fm11/fm15', v)
+  return get(MatrixType, v)
 }
 
-var _Color = struct(
-  uchar, # r
-  uchar, # g
-  uchar, # b
-  uchar  # a
-)
+var ColorType = named_struct({
+  r: uchar,
+  g: uchar,
+  b: uchar,
+  a: uchar,
+})
 def DeColor(v) {
-  return st.unpack('Cr/Cg/Cb/Ca', v)
+  return get(ColorType, v)
 }
 
-var _Rectangle = struct(
-  float, # x
-  float, # y
-  float, # width
-  float  # height
-)
+var RectangleType = named_struct({
+  x:      float,
+  y:      float,
+  width:  float,
+  height: float,
+})
 def DeRectangle(v) {
-  return st.unpack('fx/fy/fwidth/fheight', v)
+  return get(RectangleType, v)
 }
 
-var _Image = struct(
-  ptr,   # data
-  int,   # width
-  int,   # height
-  int,   # mipmaps
-  int    # format
-)
+var ImageType = named_struct({
+  data:     ptr,
+  width:    int,
+  height:   int,
+  mipmaps:  int,
+  format:   int,
+})
 def DeImage(v) {
-  var res = st.unpack('${_ptr_type}data/iwidth/iheight/imipmaps/iformat', v)
-  return {
-    data: reflect.ptr_from_address(res.data),
-    width: res.width,
-    height: res.height,
-    mipmaps: res.mipmaps,
-    format: res.format,
-  }
+  return get(ImageType, v)
 }
 
-var _Texture = struct(
-  uint,  # id
-  int,   # width
-  int,   # height
-  int,   # mipmaps
-  int    # format
-)
+var TextureType = named_struct({
+  id:       uint,
+  width:    int,
+  height:   int,
+  mipmaps:  int,
+  format:   int,
+})
 def DeTexture(v) {
-  return st.unpack('Iid/iwidth/iheight/imipmaps/iformat', v)
+  return get(TextureType, v)
 }
-var _Texture2D = _Texture
-var _TextureCubemap = _Texture
+var Texture2DType = TextureType
+var TextureCubemapType = TextureType
 var DeTexture2D = DeTexture, DeTextureCubemap = DeTexture
 
-var _RenderTexture = struct(
-  uint, # id
-  _Texture,  # texture
-  _Texture   # depth
-)
+var RenderTextureType = named_struct({
+  id:       uint,
+  texture:  TextureType,
+  depth:    TextureType,
+})
 def DeRenderTexture(v) {
-  var res = st.unpack('Iid'+
-    '/Iid2/iwidth/iheight/imipmaps/iformat'+
-    '/Iid3/iwidth2/iheight2/imipmaps2/iformat2', v)
-  return {
-    id: res.id,
-    texture: {
-      id: res.id2,
-      width: res.width,
-      height: res.height,
-      mipmaps: res.mipmaps,
-      format: res.format,
-    },
-    depth: {
-      id: res.id3,
-      width: res.width2,
-      height: res.height2,
-      mipmaps: res.mipmaps2,
-      format: res.format2,
-    }
-  }
+  var res = get(RenderTextureType, v)
+  res.texture = get(TextureType, res.texture)
+  res.depth = get(TextureType, res.depth)
+  return res
 }
-var _RenderTexture2D = _RenderTexture
+var RenderTexture2DType = RenderTextureType
 var DeRenderTexture2D = DeRenderTexture
 
-var _NPatchInfo = struct(
-  _Rectangle, # source
-  int,        # left
-  int,        # top
-  int,        # right
-  int,        # bottom
-  int         # layout
-)
+var NPatchInfoType = named_struct({
+  source: RectangleType,
+  left:   int,
+  top:    int,
+  right:  int,
+  bottom: int,
+  layout: int,
+})
 def DeNPatchInfo(v) {
-  var res = st.unpack('fx/fy/fwidth/fheight'+
-    '/ileft/itop/iright/ibottom/ilayout', v)
-  return {
-    source: {
-      x: res.x,
-      y: res.y,
-    },
-    left: res.left,
-    top: res.top,
-    right: res.right,
-    bottom: res.bottom,
-    layout: res.layout,
-  }
-}
-
-var _GlyphInfo = struct(
-  int,    # value
-  int,    # offsetX
-  int,    # offsetY
-  int,    # advanceX
-  _Image  # image
-)
-def DeGlyphInfo(x) {
-  var res = st.unpack('ivalue/ioffsetX/ioffsetY/iadvanceX'+
-    '/Idata/iwidth/iheight/imipmaps/iformat', v)
-  return {
-    value: res.value,
-    offsetX: res.offsetX,
-    offsetY: res.offsetY,
-    advanceX: res.advanceX,
-    image: {
-      data: res.data,
-      width: res.width,
-      height: res.height,
-      mipmaps: res.mipmaps,
-      format: res.format,
-    }
-  }
-}
-
-var _Font = struct(
-  int,        # baseSize
-  int,        # glyphCount
-  int,        # glyphPadding
-  _Texture2D, # texture
-  ptr,        # recs
-  ptr         # glyphs
-)
-def DeFont(v) {
-  var res = st.unpack('ibaseSize/iglyphCount/iglyphPadding'+
-    '/Iid/iwidth/iheight/imipmaps/iformat'+
-    '/${_ptr_type}recs/${_ptr_type}glyphs', v)
-  return {
-    baseSize: res.baseSize,
-    glyphCount: res.glyphCount,
-    glyphPadding: res.glyphPadding,
-    texture: {
-      id: res.id,
-      width: res.width,
-      height: res.height,
-      mipmaps: res.mipmaps,
-      format: res.format,
-    },
-    recs: reflect.ptr_from_address(res.recs),
-    glyphs: reflect.ptr_from_address(res.glyphs),
-  }
-}
-
-var _Camera2D = struct(
-  _Vector2,     # offset
-  _Vector2,     # target
-  float,   # rotatioon
-  float    # zoom
-)
-def DeCamera2D(v) {
-  var res = st.unpack('fx/fy/fx1/fy1/frotation/fzoom', v)
-  return {
-    offset: {
-      x: res.x,
-      y: res.y,
-    },
-    target: {
-      x: res.x1,
-      y: res.y1,
-    },
-    rotation: res.rotation,
-    zoom: res.zoom,
-  }
-}
-
-var _Camera3D = struct(
-  _Vector3,     # position
-  _Vector3,     # target
-  _Vector3,     # up
-  float,        # fovy
-  int           # projection
-)
-def DeCamera3D(v) {
-  var res = st.unpack('fx/fy/fz'+
-    '/fx1/fy1/fz1'+
-    'fx2/fy2/fz2'+
-    'ffovy/iprojection', v)
-  return {
-    position: {
-      x: res.x,
-      y: res.y,
-      z: res.z,
-    },
-    target: {
-      x: res.x1,
-      y: res.y1,
-      z: res.z1,
-    },
-    up: {
-      x: res.x2,
-      y: res.y2,
-      z: res.z2,
-    },
-    fovy: res.fovy,
-    projection: res.projection,
-  }
-}
-var _Camera = _Camera3D
-var DeCamera = DeCamera3D
-
-var _Mesh = struct(
-  int,  # vertexCount       
-  int,  # triangleCount      
-  ptr,  # vertices        
-  ptr,  # texcoords       
-  ptr,  # texcoords2      
-  ptr,  # normals         
-  ptr,  # tangents        
-  ptr,  # colors      
-  ptr,  # indices    
-  ptr,  # animVertices    
-  ptr,  # animNormals     
-  ptr,  # boneIds 
-  ptr,  # boneWeights     
-  uint, # vaoId    
-  ptr   # vboId    
-)
-def DeMesh(v) {
-  var res = st.unpack(
-    'ivertexCount/itriangleCount/${_ptr_type}vertices'+
-    '/${_ptr_type}texcoords/${_ptr_type}texcoords2'+
-    '/${_ptr_type}normals/${_ptr_type}tangents/${_ptr_type}colors'+
-    '/${_ptr_type}indices/${_ptr_type}animVertices'+
-    '/${_ptr_type}animNormals/${_ptr_type}boneIds/${_ptr_type}boneWeights'+
-    '/IvaoId/${_ptr_type}vboId', v)
-
-    res['vertices'] = reflect.ptr_from_address(res.vertices)
-    res['texcoords'] = reflect.ptr_from_address(res.texcoords)
-    res['texcoords2'] = reflect.ptr_from_address(res.texcoords2)
-    res['normals'] = reflect.ptr_from_address(res.normals)
-    res['tangents'] = reflect.ptr_from_address(res.tangents)
-    res['colors'] = reflect.ptr_from_address(res.colors)
-    res['indices'] = reflect.ptr_from_address(res.indices)
-    res['animVertices'] = reflect.ptr_from_address(res.animVertices)
-    res['boneIds'] = reflect.ptr_from_address(res.boneIds)
-    res['boneWeights'] = reflect.ptr_from_address(res.boneWeights)
-    res['vaoId'] = reflect.ptr_from_address(res.vaoId)
-    res['vboId'] = reflect.ptr_from_address(res.vboId)
-
-    return res
-}
-
-var _Shader = struct(
-  uint,    # id
-  ptr      # locs
-)
-def DeShader(v) {
-  var res = st.unpack('Qid/${_ptr_type}locs', v)
-  res['locs'] = reflect.ptr_from_address(res.locs)
+  var res = get(NPatchInfoType, v)
+  res.source = get(RectangleType, res.source)
   return res
 }
 
-var _MaterialMap = struct(
-  _Texture2D, # texture
-  _Color,     # color
-  float       # value
-)
+var GlyphInfoType = named_struct({
+  value:    int,
+  offsetX:  int,
+  offsetY:  int,
+  advanceX: int,
+  image:    ImageType,
+})
+def DeGlyphInfo(x) {
+  var res = get(GlyphInfoType, v)
+  res.image = get(ImageType, res.image)
+  return res
+}
+
+var FontType = named_struct({
+  baseSize:     int,
+  glyphCount:   int,
+  glyphPadding: int,
+  texture:      Texture2DType,
+  recs:         ptr,
+  glyphs:       ptr,
+})
+def DeFont(v) {
+  var res = get(FontType, v)
+  res.texture = get(TextureType, res.texture)
+  return res
+}
+
+var Camera2DType = named_struct({
+  offset:     Vector2Type,
+  target:     Vector2Type,
+  rotatioon:  float,
+  zoom:       float,
+})
+def DeCamera2D(v) {
+  var res = get(Camera2DType, v)
+  res.offset = get(Vector2Type, res.offset)
+  res.target = get(Vector2Type, res.target)
+  return res
+}
+
+var Camera3DType = named_struct({
+  position:   Vector3Type,
+  target:     Vector3Type,
+  up:         Vector3Type,
+  fovy:       float,
+  projection: int,
+})
+def DeCamera3D(v) {
+  var res = get(Camera3DType, v)
+  res.position = get(Vector3Type, res.position)
+  res.target = get(Vector3Type, res.target)
+  res.up = get(Vector3Type, res.up)
+  return res
+}
+var CameraType = Camera3DType
+var DeCamera = DeCamera3D
+
+var MeshType = named_struct({
+  vertexCount:    int,
+  triangleCount:  int,
+  vertices:       ptr,
+  texcoords:      ptr,
+  texcoords2:     ptr,
+  normals:        ptr,
+  tangents:       ptr,
+  colors:         ptr,
+  indices:        ptr,
+  animVertices:   ptr,
+  animNormals:    ptr,
+  boneIds:        ptr,
+  boneWeights:    ptr,
+  vaoId:          uint,
+  vboId:          ptr,
+})
+def DeMesh(v) {
+  return get(MeshType, v)
+}
+
+var ShaderType = named_struct({
+  id:   uint,
+  locs: ptr,
+})
+def DeShader(v) {
+  return get(ShaderType, v)
+}
+
+var MaterialMapType = named_struct({
+  texture:  Texture2DType,
+  color:    ColorType,
+  value:    float,
+})
 def DeMaterialMap(v) {
-  var res = st.unpack('Iid/iwidth/iheight/imipmaps/iformat/Cr/Cg/Cb/Ca/fvalue', v)
-  return {
-    texture: {
-      id: res.id,
-      width: res.width,
-      height: res.height,
-      mipmaps: res.mipmaps,
-      format: res.format,
-    },
-    color: {
-      r: res.r,
-      g: res.g,
-      b: res.b,
-      a: res.a,
-    },
-    value: res.value
-  }
+  var res = get(MaterialMapType, v)
+  res.texture = get(Texture2DType, res.texture)
+  res.color = get(ColorType, res.color)
+  return res
 }
 
-var _Material = struct(
-  _Shader,        # shader
-  ptr,            # maps
-  struct(         # params
-    float, float, 
-    float, float
-  )
-)
+# only used by Material, VrStereoConfig and VrDeviceInfo so far...
+var _float2 = struct(float, float)
+var _float4 = struct(float, float, float, float)
+var Matrix2Type = struct(MatrixType, MatrixType)
+def DeMatrix2(v) {
+  var res = get(Matrix2Type, v)
+  res[0] = get(MatrixType, res[0])
+  res[1] = get(MatrixType, res[1])
+  return res
+}
+
+var MaterialType = named_struct({
+  shader: ShaderType,
+  maps:   ptr,
+  params: _float4,
+})
 def DeMaterial(v) {
-  var res = struct.unpack('Iid/${_ptr_type}locs/${_ptr_type}maps/fp1/fp2/fp3/fp4', v)
-  return {
-    shader: {
-      id: res.id,
-      locs: reflect.ptr_from_address(res.locs),
-    },
-    maps: reflect.ptr_from_address(res.maps),
-    params: [res.p1, res.p2, res.p3, res.p4],
-  }
+  var res = get(MaterialType, v)
+  res.shader = get(ShaderType, res.shader)
+  res.params = get(_float4, res.params)
+  return res
 }
 
-var _float3 = struct( # v
+var _float3 = struct(
   float,
   float,
   float
 )
 def Defloat3(v) {
-  return st.unpack('f3', v).to_list()[1]
+  return get(_float3, v)
 }
 
-var _float16 = struct( # v
+var _float16 = struct(
   float, float, float, float,
   float, float, float, float,
   float, float, float, float
 )
 def Defloat16(v) {
-  return st.unpack('f16', v).to_list()[1]
+  return get(_float16, v)
 }
 
-var _Transform = struct(
-  _Vector3,     # translation
-  _Quaternion,  # rotation
-  _Vector3      # scale
-)
+var TransformType = named_struct({
+  translation:  Vector3Type,
+  rotation:     QuaternionType,
+  scale:        Vector3Type,
+})
 def DeTransform(v) {
-  var res = st.unpack('fx/fy/fz/fx1/fy1/fz1/fw1/fx2/fy2/fz2', v)
-  return {
-    translation: {x: res.x, y: res.y, z: res.z},
-    rotation: {x: res.x1, y: res.y1, z: res.z1, w: res.w1},
-    scale: {x: res.x2, y: res.y2, z: res.z2},
-  }
+  var res = get(TransformType, v)
+  res.translation = get(Vector3Type, res.translation)
+  res.rotation = get(QuaternionType, res.rotation)
+  res.scale = get(Vector3Type, res.scale)
+  return res
 }
 
-var _BoneInfo = struct(
+var _c32 = struct(
   char, char, char, char, char, char, char, char,
   char, char, char, char, char, char, char, char,
   char, char, char, char, char, char, char, char,
-  char, char, char, char, char, char, char, char,
-  int
+  char, char, char, char, char, char, char, char
 )
+var BoneInfoType = named_struct({
+  name: _c32,
+  'parent': int,
+})
 def DeBoneInfo(v) {
-  var res = st.unpack('c32/i1parent')
-  return {
-    name: iters.filter(res, @(_, x){ return !is_string(x) }),
-    'parent': res['parent'],
-  }
+  var res = get(BoneInfoType, v)
+  res.name = get(_c32, res.name)
+  return res
 }
 
-var _Model = struct(
-  _Matrix,    # transform
-  int,        # meshCount
-  int,        # materialCount
-  ptr,        # meshes
-  ptr,        # materials
-  ptr,        # meshMaterial
-  int,        # boneCount
-  ptr,        # bones
-  ptr         # bindPose
-)
+var ModelType = named_struct({
+  transform:      MatrixType,
+  meshCount:      int,
+  materialCount:  int,
+  meshes:         ptr,
+  materials:      ptr,
+  meshMaterial:   ptr,
+  boneCount:      int,
+  bones:          ptr,
+  bindPose:       ptr,
+})
 def DeModel(v) {
-  var res = st.unpack(
-    'fm0/fm4/fm8/fm12' +
-    '/fm1/fm5/fm9/fm13' +
-    '/fm2/fm6/fm10/fm14' +
-    '/fm3/fm7/fm11/fm15' +
-    '/imeshCount/imaterialCount' +
-    '/${_ptr_type}meshes' +
-    '/${_ptr_type}materials' +
-    '/${_ptr_type}meshMaterial' +
-    '/iboneCount' +
-    '/${_ptr_type}bones' +
-    '/${_ptr_type}bindPose', v)
-    
-  return {
-    transform: {
-      m0: res.m0, m1: res.m1, m2: res.m2, m3: res.m3,
-      m4: res.m4, m5: res.m5, m6: res.m6, m7: res.m7,
-      m8: res.m8, m9: res.m9, m10: res.m10, m11: res.m11,
-      m12: res.m12, m13: res.m13, m14: res.m14, m15: res.m15,
-    },
-    meshCount: res.meshCount,
-    materialCount: res.materialCount,
-    meshes: reflect.ptr_from_address(res.meshes),
-    materials: reflect.ptr_from_address(res.materials),
-    meshMaterial: reflect.ptr_from_address(res.meshMaterial),
-    boneCount: res.boneCount,
-    bones: reflect.ptr_from_address(res.bones),
-    bindPose: reflect.ptr_from_address(res.bindPose),
-  }
+  var res = get(ModelType, v)
+  res.transform = get(MatrixType, res.transform)
+  return res
 }
 
-var _ModelAnimation = struct(
-  int,  # boneCount
-  int,  # frameCount
-  ptr,  # bones
-  ptr   # framePoses
-)
+var ModelAnimationType = named_struct({
+  boneCount:  int,
+  frameCount: int,
+  bones:      ptr,
+  framePoses: ptr,
+})
 def DeModelAnimation(v) {
-  var res = st.unpack('iboneCount/iframeCount/${_ptr_type}bones/${_ptr_type}framePoses', v)
-  res['bones'] = reflect.ptr_from_address(res.bones)
-  res['framePoses'] = reflect.ptr_from_address(res.framePoses)
-  return res
+  return get(ModelAnimationType, v)
 }
 
-var _Ray = struct(
-  _Vector3,    # postition
-  _Vector3     # direction
-)
+var RayType = named_struct({
+  postition: Vector3Type,
+  direction: Vector3Type,
+})
 def DeRay(v) {
-  var res = st.unpack('fx/fy/fz/fx1/fy1/fz1', v)
-  return {
-    position: {
-      x: res.x,
-      y: res.y,
-      z: res.z,
-    },
-    direction: {
-      x: res.x1,
-      y: res.y1,
-      z: res.z1,
-    },
-  }
+  var res = get(RayType, v)
+  res.postition = get(Vector3Type, res.postition)
+  res.direction = get(Vector3Type, res.direction)
+  return res
 }
 
-var _RayCollision = struct(
-  bool,     # hit
-  float,    # distance
-  _Vector3, # point
-  _Vector3  # point
-)
+var RayCollisionType = named_struct({
+  hit:      bool,
+  distance: float,
+  point:    Vector3Type,
+  normal:   Vector3Type  # point
+})
 def DeRayCollision(v) {
-  var res = st.unpack('chit/fdistance/fx/fy/fz/fx1/fy1/fz1', v)
-  return {
-    hit: res.hit,
-    distance: res.distance,
-    point: {
-      x: res.x,
-      y: res.y,
-      z: res.z,
-    },
-    point: {
-      x: res.x1,
-      y: res.y1,
-      z: res.z1,
-    },
-  }
+  var res = get(RayCollisionType, v)
+  res.point = get(Vector3Type, res.point)
+  res.normal = get(Vector3Type, res.normal)
+  return res
 }
 
-var _BoundingBox = struct(
-  _Vector3,    # min
-  _Vector3     # max
-)
+var BoundingBoxType = named_struct({
+  min: Vector3Type,
+  max: Vector3Type,
+})
 def DeBoundingBox(v) {
-  var res = st.unpack('fx/fy/fz/fx1/fy1/fz1', v)
-  return {
-    min: {
-      x: res.x,
-      y: res.y,
-      z: res.z,
-    },
-    max: {
-      x: res.x1,
-      y: res.y1,
-      z: res.z1,
-    },
-  }
+  var res = get(BoundingBoxType, v)
+  res.min = get(Vector3Type, res.min)
+  res.normal = get(Vector3Type, res.normal)
+  return res
 }
 
-var _Wave = struct(
-  uint,   # frameCount
-  uint,   # sampleRate
-  uint,   # sampleSize
-  uint,   # channels
-  ptr     # data
-)
+var WaveType = named_struct({
+  frameCount: uint,
+  sampleRate: uint,
+  sampleSize: uint,
+  channels:   uint,
+  data:       ptr,
+})
 def DeWave(v) {
-  var res = st.unpack('IframeCount/IsampleRate/IsampleSize/Ichannels/${_ptr_type}data', v)
-  res['data'] = reflect.ptr_from_address(res.data)
-  return res
+  return get(WaveType, v)
 }
 
-var _AudioStream = struct(
-  ptr,    # buffer
-  ptr,    # processor
-  uint,   # sampleRate
-  uint,   # sampleSize
-  uint   # channels
-)
+var AudioStreamType = named_struct({
+  buffer:     ptr,
+  processor:  ptr,
+  sampleRate: uint,
+  sampleSize: uint,
+  channels:   uint,
+})
 def DeAudioStream(v) {
-  var res = st.unpack('${_ptr_type}buffer/${_ptr_type}processor/IsampleRate/IsampleSize/Ichannels', v)
-  res['buffer'] = reflect.ptr_from_address(res.buffer)
-  res['processor'] = reflect.ptr_from_address(res.processor)
+  return get(AudioStreamType, v)
+}
+
+var SoundType = named_struct({
+  stream: AudioStreamType,
+  frameCount: uint,
+})
+def DeSound(v) {
+  var res = get(SoundType, v)
+  res.stream = get(AudioStreamType, res.stream)
   return res
 }
 
-var _Sound = struct(
-  _AudioStream, # stream
-  uint          # frameCount
-)
-def DeSound(v) {
-  var res = st.unpack('${_ptr_type}buffer/${_ptr_type}processor/IsampleRate/IsampleSize/Ichannels/IframeCount', v)
-  return {
-    stream: {
-      buffer: reflect.ptr_from_address(res.buffer),
-      processor: reflect.ptr_from_address(res.processor),
-      sampleRate: res.sampleRate,
-      sampleSize: res.sampleSize,
-      channels: res.channels,
-    },
-    frameCount: res.frameCount,
-  }
+var MusicType = named_struct({
+  stream: AudioStreamType,
+  frameCount: uint,
+  looping: bool,
+  ctxType: int,
+  ctxData: ptr,
+})
+def DeMusic(v) {
+  var res = get(MusicType, v)
+  res.stream = get(AudioStreamType, res.stream)
+  return res
 }
 
-var _Music = struct(
-  _AudioStream, # stream
-  uint,         # frameCount
-  bool,         # looping
-  int,          # ctxType
-  ptr          # ctxData
-)
-def DeMusic(v) {
-  var res = st.unpack('${_ptr_type}buffer/${_ptr_type}processor/IsampleRate/IsampleSize/Ichannels/IframeCount/clooping/ictxType/${_ptr_type}ctxData', v)
-  return {
-    stream: {
-      buffer: reflect.ptr_from_address(res.buffer),
-      processor: reflect.ptr_from_address(res.processor),
-      sampleRate: res.sampleRate,
-      sampleSize: res.sampleSize,
-      channels: res.channels,
-    },
-    frameCount: res.frameCount,
-    looping: res.looping,
-    ctxType: res.ctxType,
-    ctxData: reflect.ptr_from_address(res.ctxData),
-  }
+var VrDeviceInfoType = named_struct({
+  hResolution:            int,                
+  vResolution:            int,                
+  hScreenSize:            float,              
+  vScreenSize:            float,              
+  vScreenCenter:          float,            
+  eyeToScreenDistance:    float,      
+  lensSeparationDistance: float,   
+  interpupillaryDistance: float,   
+  lensDistortionValues:   _float4,  
+  chromaAbCorrection:     _float4,    
+})
+def DeVrDeviceInfo(v) {
+  var res = get(VrDeviceInfoType, v)
+  res.lensDistortionValues = get(_float4, res.lensDistortionValues)
+  res.chromaAbCorrection = get(_float4, res.chromaAbCorrection)
+  return res
+}
+
+var VrStereoConfigType = named_struct({
+  projection:         Matrix2Type,           
+  viewOffset:         Matrix2Type,           
+  leftLensCenter:     _float2,        
+  rightLensCenter:    _float2,       
+  leftScreenCenter:   _float2,      
+  rightScreenCenter:  _float2,     
+  scale:              _float2,                 
+  scaleIn:            _float2,               
+})
+def DeVrStereoConfig(v) {
+  var res = get(VrStereoConfigType, v)
+  res.projection = get(Matrix2Type, res.projection)
+  res.viewOffset = get(Matrix2Type, res.viewOffset)
+  res.leftLensCenter = get(_float2, res.leftLensCenter)
+  res.rightLensCenter = get(_float2, res.rightLensCenter)
+  res.leftScreenCenter = get(_float2, res.leftScreenCenter)
+  res.rightScreenCenter = get(_float2, res.rightScreenCenter)
+  res.scale = get(_float2, res.scale)
+  res.scaleIn = get(_float2, res.scaleIn)
+  return res
+}
+
+var FilePathListType = named_struct({
+  capacity: uint,
+  count:    uint,
+  paths:    ptr,
+})
+def DeFilePathList(v) {
+  return get(FilePathListType, v)
 }
 
 # -------------------------------------------------------------
@@ -615,15 +461,15 @@ def DeMusic(v) {
  * Structs
  */
 def Vector2(x, y) {
-  return st.pack('f2', x, y)
+  return new(Vector2Type, x, y)
 }
 
 def Vector3(x, y, z) {
-  return st.pack('f3', x, y, z)
+  return new(Vector3Type, x, y, z)
 }
 
 def Vector4(x, y, z, w) {
-  return st.pack('f4', x, y, z, w)
+  return new(Vector4Type, x, y, z, w)
 }
 
 # Quaternion, 4 components (Vector4 alias)
@@ -635,7 +481,7 @@ def Matrix(
   m2, m6, m10, m14,
   m3, m7, m11, m15
 ) {
-  return st.pack('f16', 
+  return new(MatrixType, 
     m0, m4, m8, m12,
     m1, m5, m9, m13,
     m2, m6, m10, m14,
@@ -644,19 +490,19 @@ def Matrix(
 }
 
 def Color(r, g, b, a) {
-  return st.pack('C4', r, g, b, a)
+  return new(ColorType, r, g, b, a)
 }
 
 def Rectangle(x, y, width, height) {
-  return st.pack('f4', x, y, width, height)
+  return new(RectangleType, x, y, width, height)
 }
 
 def Image(data, width, height, mipmaps, format) {
-  return st.pack('Ii4', reflect.get_address(data), width, height, mipmaps, format)
+  return new(ImageType, reflect.get_address(data), width, height, mipmaps, format)
 }
 
 def Texture(id, width, height, mipmaps, format) {
-  return st.pack('Ii4', id, width, height, mipmaps, format)
+  return new(TextureType, id, width, height, mipmaps, format)
 }
 
 # Texture2D, same as Texture
@@ -665,22 +511,22 @@ var Texture2D = Texture
 var TextureCubemap = Texture
 
 def RenderTexture(id, texture, depth) {
-  return st.pack('IC${texture.length()}C${depth.length()}', id, texture, depth)
+  return new(RenderTextureType, id, texture, depth)
 }
 
 # RenderTexture2D, same as RenderTexture
 var RenderTexture2D = RenderTexture
 
 def NPatchInfo(source, left, top, right, bottom, layout) {
-  return st.pack('C${source.length()}i5', source, left, top, right, bottom, layout)
+  return new(NPatchInfoType, source, left, top, right, bottom, layout)
 }
 
 def GlyphInfo(value, offsetX, offsetY, advanceX, image) {
-  return st.pack('i4C${image.length()}', value, offsetX, offsetY, advanceX, image)
+  return new(GlyphInfoType, value, offsetX, offsetY, advanceX, image)
 }
 
 def Camera2D(offset, target, rotation, zoom) {
-  return st.pack('C${offset.length()}C${offset.length()}f2', offset, target, rotation, zoom)
+  return new(Camera2DType, offset, target, rotation, zoom)
 }
 
 def Font(baseSize, glyphCount, glyptPadding, texture, recs, glyphs) {
@@ -694,11 +540,11 @@ def Font(baseSize, glyphCount, glyptPadding, texture, recs, glyphs) {
     glyphs_st.extend(st.pack('C*', glyh))
   }
 
-  return st.pack('i3C${texture.length()}${_ptr_type}${_ptr_type}', baseSize, glyphCount, glyptPadding, texture, reflect.get_address(recs_st), reflect.get_address(glyphs_st))
+  return new(FontType, baseSize, glyphCount, glyptPadding, texture, reflect.get_address(recs_st), reflect.get_address(glyphs_st))
 }
 
 def Camera3D(position, target, up, fovy, projection) {
-  return st.pack('C${position.length()}C${target.length()}C${up.length()}f1i1', position, target, up, fovy, projection)
+  return new(Camera3DType, position, target, up, fovy, projection)
 }
 
 # Camer, same as Camera3D
@@ -721,8 +567,8 @@ def Mesh(
   vaoId, 
   vboId
 ) {
-  return st.pack(
-    'i2${_ptr_type}11I${_ptr_type}', 
+  return new(
+    MeshType, 
     vertexCount, 
     triangleCount, 
     reflect.get_address(vertices), 
@@ -742,18 +588,18 @@ def Mesh(
 }
 
 def Shader(id, locs) {
-  return st.pack('I${_ptr_type}', id, reflect.get_address(locs))
+  return new(ShaderType, id, reflect.get_address(locs))
 }
 
 def MaterialMap(texture, color, value) {
-  return st.pack('C${texture.length()}C${color.length()}f', texture, color, value)
+  return new(MaterialMapType, texture, color, value)
 }
 
 def Material(shader, maps, params) {
   if !is_list(params) params = to_list(params)
   if params.length() < 4 
     params.extend([0] * (4 - params.length()))
-  return st.pack('C${shader.length()}${_ptr_type}f4', shader, reflect.get_address(maps), params)
+  return new(MaterialType, shader, reflect.get_address(maps), params)
 }
 
 def float3(floats) {
@@ -761,7 +607,7 @@ def float3(floats) {
   if floats.length() < 3 {
     floats.extend([0] * (3 - floats.length()))
   }
-  return st.pack('f3', floats)
+  return new(_float3, floats)
 }
 
 def float16(floats) {
@@ -769,29 +615,26 @@ def float16(floats) {
   if floats.length() < 16 {
     floats.extend([0] * (16 - floats.length()))
   }
-  return st.pack('f16', floats)
+  return new(_float16, floats)
 }
 
 def BoneInfo(name, paren) {
   if !is_list(name) params = to_list(name)
-  if name.length() < 32 
-  name.extend([0] * (16 - name.length()))
-  return st.pack('c32i', name, paren)
+  if name.length() < 32 {
+    name.extend([0] * (16 - name.length()))
+  }
+  return new(BoneInfoType, name, paren)
 }
 
 def Transform(translation, rotation, scale) {
-  return st.pack(
-    'C${translation.length()}C${rotation.length()}C${scale.length()}',
-    translation, rotation, scale
-  )
+  return new(TransformType, translation, rotation, scale)
 }
 
 def Model(
   transform, meshCount, materialCount, meshes, 
   materials, meshMaterial, boneCount, bones, bindPose
 ) {
-  return st.pack(
-    'C${transform.length()}i2${_ptr_type}3i${_ptr_type}2',
+  return new(ModelType,
     transform, meshCount, materialCount, reflect.get_address(meshes), 
     reflect.get_address(materials), reflect.get_address(meshMaterial), 
     boneCount, reflect.get_address(bones), reflect.get_address(bindPose)
@@ -799,35 +642,89 @@ def Model(
 }
 
 def ModelAnimation(boneCount, frameCount, bones, framePoses) {
-  return st.pack('i2${_ptr_type}2', boneCount, frameCount, reflect.get_address(bones), reflect.get_address(framePoses))
+  return new(ModelAnimationType, boneCount, frameCount, reflect.get_address(bones), reflect.get_address(framePoses))
 }
 
 def Ray(position, direction) {
-  return st.pack('C${position.length()}C${locs.length()}', position, direction)
+  return new(RayType, position, direction)
 }
 
 def RayCollision(hit, distance, point, normal) {
-  return st.pack('cfC${point.length()}C${normal.length()}', hit, distance, point, normal)
+  return new(RayCollisionType, hit, distance, point, normal)
 }
 
 def BoundingBox(min, max) {
-  return st.pack('C${min.length()}C${max.length()}', min, max)
+  return new(BoundingBoxType, min, max)
 }
 
 def Wave(frameCount, sampleRate, sampleSize, channels, data) {
-  return st.pack('I4${_ptr_type}', frameCount, sampleRate, sampleSize, channels, reflect.get_address(data))
+  return new(WaveType, frameCount, sampleRate, sampleSize, channels, reflect.get_address(data))
 }
 
 def AudioStream(buffer, processor, sampleRate, sampleSize, channels) {
-  return st.pack('${_ptr_type}2I3', reflect.get_address(buffer), reflect.get_address(processor), sampleRate, sampleSize, channels)
+  return new(AudioStreamType, reflect.get_address(buffer), reflect.get_address(processor), sampleRate, sampleSize, channels)
 }
 
 def Sound(stream, frameCount) {
-  return st.pack('C${stream.length()}I', stream, frameCount)
+  return new(SoundType, stream, frameCount)
 }
 
 def Music(stream, frameCount, looping, ctxType, ctxData) {
-  return st.pack('C${stream.length()}Ici${_ptr_type}', stream, frameCount, looping, ctxType, reflect.get_address(ctxData))
+  return new(MusicType, stream, frameCount, looping, ctxType, reflect.get_address(ctxData))
+}
+
+def VrDeviceInfo(
+  hResolution,
+  vResolution,
+  hScreenSize,
+  vScreenSize,
+  vScreenCenter,
+  eyeToScreenDistance,
+  lensSeparationDistance,
+  interpupillaryDistance,
+  lensDistortionValues,
+  chromaAbCorrection
+) {
+  return new(
+    VrDeviceInfoType, 
+    hResolution,
+    vResolution,
+    hScreenSize,
+    vScreenSize,
+    vScreenCenter,
+    eyeToScreenDistance,
+    lensSeparationDistance,
+    interpupillaryDistance,
+    lensDistortionValues,
+    chromaAbCorrection
+  )
+}
+
+def VrStereoConfig(
+  projection,
+  viewOffset,
+  leftLensCenter,
+  rightLensCenter,
+  leftScreenCenter,
+  rightScreenCenter,
+  scale,
+  scaleIn
+) {
+  return new(
+    VrStereoConfigType,
+    projection,
+    viewOffset,
+    leftLensCenter,
+    rightLensCenter,
+    leftScreenCenter,
+    rightScreenCenter,
+    scale,
+    scaleIn
+  )
+}
+
+def FilePathList(capacity, count, paths) {
+  return new(FilePathListType, capacity, count, paths)
 }
 
 
@@ -949,8 +846,8 @@ def Init(debug) {
     MaximizeWindow: ray.define('MaximizeWindow', void),
     MinimizeWindow: ray.define('MinimizeWindow', void),
     RestoreWindow: ray.define('RestoreWindow', void),
-    SetWindowIcon: ray.define('SetWindowIcon', void, _Image),
-    SetWindowIcons: ray.define('SetWindowIcons', ptr, int), # return value must be unpacked into Images
+    SetWindowIcon: ray.define('SetWindowIcon', void, ImageType),
+    SetWindowIcons: ray.define('SetWindowIcons', ptr, int),
     SetWindowTitle: ray.define('SetWindowTitle', void, char_ptr),
     SetWindowPosition: ray.define('SetWindowPosition', void, int, int),
     SetWindowMonitor: ray.define('SetWindowMonitor', void, int),
@@ -964,14 +861,14 @@ def Init(debug) {
     GetRenderHeight: ray.define('GetRenderHeight', int),
     GetMonitorCount: ray.define('GetMonitorCount', int),
     GetCurrentMonitor: ray.define('GetCurrentMonitor', int),
-    GetMonitorPosition: ray.define('GetMonitorPosition', uchar_ptr, int), # return must be unpacked into Vector2
+    GetMonitorPosition: ray.define('GetMonitorPosition', uchar_ptr, int),
     GetMonitorWidth: ray.define('GetMonitorWidth', int, int),
     GetMonitorHeight: ray.define('GetMonitorHeight', int, int),
     GetMonitorPhysicalWidth: ray.define('GetMonitorPhysicalWidth', int, int),
     GetMonitorPhysicalHeight: ray.define('GetMonitorPhysicalHeight', int, int),
     GetMonitorRefreshRate: ray.define('GetMonitorRefreshRate', int, int),
-    GetWindowPosition: ray.define('GetWindowPosition', uchar_ptr), # return must be unpacked into Vector2
-    GetWindowScaleDPI: ray.define('GetWindowScaleDPI', uchar_ptr), # return must be unpacked into Vector2
+    GetWindowPosition: ray.define('GetWindowPosition', uchar_ptr),
+    GetWindowScaleDPI: ray.define('GetWindowScaleDPI', uchar_ptr),
     GetMonitorName: ray.define('GetMonitorName', char_ptr, int),
     SetClipboardText: ray.define('SetClipboardText', void, char_ptr),
     GetClipboardText: ray.define('GetClipboardText', char_ptr),
@@ -994,16 +891,16 @@ def Init(debug) {
     IsCursorOnScreen: ray.define('IsCursorOnScreen', void),
 
     # Drawring-related functions
-    ClearBackground: ray.define('ClearBackground', void, _Color),
+    ClearBackground: ray.define('ClearBackground', void, ColorType),
     BeginDrawing: ray.define('BeginDrawing', void),
     EndDrawing: ray.define('EndDrawing', void),
-    BeginMode2D: ray.define('BeginMode2D', void, _Camera2D),
+    BeginMode2D: ray.define('BeginMode2D', void, Camera2DType),
     EndMode2D: ray.define('EndMode2D', void),
-    BeginMode3D: ray.define('BeginMode3D', void, _Camera3D),
+    BeginMode3D: ray.define('BeginMode3D', void, Camera3DType),
     EndMode3D: ray.define('EndMode3D', void),
-    BeginTextureMode: ray.define('BeginTextureMode', void, _RenderTexture),
+    BeginTextureMode: ray.define('BeginTextureMode', void, RenderTextureType),
     EndTextureMode: ray.define('EndTextureMode', void),
-    BeginShaderMode: ray.define('BeginShaderMode', void, _Shader),
+    BeginShaderMode: ray.define('BeginShaderMode', void, ShaderType),
     EndShaderMode: ray.define('EndShaderMode', void),
     BeginBlendMode: ray.define('BeginBlendMode', void, int),
     EndBlendMode: ray.define('EndBlendMode', void),
@@ -1013,23 +910,23 @@ def Init(debug) {
     # var EndVrStereoMode = ray.define('EndVrStereoMode', void)
 
     # Shader management functions
-    LoadShader: ray.define('LoadShader', _Shader, char_ptr, char_ptr),
-    LoadShaderFromMemory: ray.define('LoadShaderFromMemory', _Shader, char_ptr, char_ptr),
-    IsShaderReady: ray.define('IsShaderReady', bool, _Shader),
-    GetShaderLocation: ray.define('GetShaderLocation', int, _Shader, char_ptr),
-    GetShaderLocationAttrib: ray.define('GetShaderLocationAttrib', int, _Shader, char_ptr),
-    SetShaderValue: ray.define('SetShaderValue', void, _Shader, int, ptr, int),
-    SetShaderValueV: ray.define('SetShaderValueV', void, _Shader, int, ptr, int, int),
-    SetShaderValueMatrix: ray.define('SetShaderValueMatrix', void, _Shader, _Matrix),
-    SetShaderValueTexture: ray.define('SetShaderValueTexture', void, _Shader, _Texture2D),
-    UnloadShader: ray.define('UnloadShader', void, _Shader),
+    LoadShader: ray.define('LoadShader', ShaderType, char_ptr, char_ptr),
+    LoadShaderFromMemory: ray.define('LoadShaderFromMemory', ShaderType, char_ptr, char_ptr),
+    IsShaderReady: ray.define('IsShaderReady', bool, ShaderType),
+    GetShaderLocation: ray.define('GetShaderLocation', int, ShaderType, char_ptr),
+    GetShaderLocationAttrib: ray.define('GetShaderLocationAttrib', int, ShaderType, char_ptr),
+    SetShaderValue: ray.define('SetShaderValue', void, ShaderType, int, ptr, int),
+    SetShaderValueV: ray.define('SetShaderValueV', void, ShaderType, int, ptr, int, int),
+    SetShaderValueMatrix: ray.define('SetShaderValueMatrix', void, ShaderType, MatrixType),
+    SetShaderValueTexture: ray.define('SetShaderValueTexture', void, ShaderType, Texture2DType),
+    UnloadShader: ray.define('UnloadShader', void, ShaderType),
 
     # Screen-space-related functions
-    GetMouseRay: ray.define('GetMouseRay', _Ray, _Vector2, _Camera3D), # return value will have to be unpacked to Ray
-    GetWorldToScreen: ray.define('GetWorldToScreen', _Vector2, _Vector3, _Camera3D),
-    GetScreenToWorld2D: ray.define('GetScreenToWorld2D', _Vector2, _Vector2, _Camera2D),
-    GetWorldToScreenEx: ray.define('GetWorldToScreenEx', _Vector2, _Vector3, _Camera3D, int, int),
-    GetWorldToScreen2D: ray.define('GetWorldToScreen2D', _Vector2, _Vector2, _Camera2D),
+    GetMouseRay: ray.define('GetMouseRay', RayType, Vector2Type, Camera3DType),
+    GetWorldToScreen: ray.define('GetWorldToScreen', Vector2Type, Vector3Type, Camera3DType),
+    GetScreenToWorld2D: ray.define('GetScreenToWorld2D', Vector2Type, Vector2Type, Camera2DType),
+    GetWorldToScreenEx: ray.define('GetWorldToScreenEx', Vector2Type, Vector3Type, Camera3DType, int, int),
+    GetWorldToScreen2D: ray.define('GetWorldToScreen2D', Vector2Type, Vector2Type, Camera2DType),
 
     # Timing-related functions
     SetTargetFPS: ray.define('SetTargetFPS', void, int),
@@ -1081,19 +978,19 @@ def Init(debug) {
     IsMouseButtonUp: ray.define('IsMouseButtonUp', bool, int),
     GetMouseX: ray.define('GetMouseX', int),
     GetMouseY: ray.define('GetMouseY', int),
-    GetMousePosition: ray.define('GetMousePosition', _Vector2),
-    GetMouseDelta: ray.define('GetMouseDelta', _Vector2),
+    GetMousePosition: ray.define('GetMousePosition', Vector2Type),
+    GetMouseDelta: ray.define('GetMouseDelta', Vector2Type),
     SetMousePosition: ray.define('SetMousePosition', void, int, int),
     SetMouseOffset: ray.define('SetMouseOffset', void, int, int),
     SetMouseScale: ray.define('SetMouseScale', void, int, int),
     GetMouseWheelMove: ray.define('GetMouseWheelMove', float),
-    GetMouseWheelMoveV: ray.define('GetMouseWheelMoveV', _Vector2),
+    GetMouseWheelMoveV: ray.define('GetMouseWheelMoveV', Vector2Type),
     SetMouseCursor: ray.define('SetMouseCursor', void, int),
 
     # Input-related functions: touch
     GetTouchX: ray.define('GetTouchX', int),
     GetTouchY: ray.define('GetTouchY', int),
-    GetTouchPosition: ray.define('GetTouchPosition', _Vector2, int),
+    GetTouchPosition: ray.define('GetTouchPosition', Vector2Type, int),
     GetTouchPointId: ray.define('GetTouchPointId', int, int),
     GetTouchPointCount: ray.define('GetTouchPointCount', int),
 
@@ -1105,9 +1002,9 @@ def Init(debug) {
     IsGestureDetected: ray.define('IsGestureDetected', bool, uint),
     GetGestureDetected: ray.define('GetGestureDetected', int),
     GetGestureHoldDuration: ray.define('GetGestureHoldDuration', float),
-    GetGestureDragVector: ray.define('GetGestureDragVector', _Vector2),
+    GetGestureDragVector: ray.define('GetGestureDragVector', Vector2Type),
     GetGestureDragAngle: ray.define('GetGestureDragAngle', float),
-    GetGesturePinchVector: ray.define('GetGesturePinchVector', _Vector2),
+    GetGesturePinchVector: ray.define('GetGesturePinchVector', Vector2Type),
     GetGesturePinchAngle: ray.define('GetGesturePinchAngle', float),
 
 
@@ -1115,220 +1012,220 @@ def Init(debug) {
     #  Camera System Functions (Module: rcamera)
     # ------------------------------------------------------------------------------------
     UpdateCamera: ray.define('UpdateCamera', void, ptr, int),
-    UpdateCameraPro: ray.define('UpdateCamera', void, ptr, _Vector3, _Vector3, int),
+    UpdateCameraPro: ray.define('UpdateCamera', void, ptr, Vector3Type, Vector3Type, int),
 
     /**
      * rshapes
      */
-    SetShapesTexture: ray.define('SetShapesTexture', void, _Texture, _Rectangle),
+    SetShapesTexture: ray.define('SetShapesTexture', void, TextureType, RectangleType),
     # Basic shape drawing functions
-    DrawPixel: ray.define('DrawPixel', void, int, int, _Color),
-    DrawPixelV: ray.define('DrawPixelV', void, _Vector2, _Color),
-    DrawLine: ray.define('DrawLine', void, int, int, int, int, _Color),
-    DrawLineV: ray.define('DrawLineV', void, _Vector2, _Vector2, _Color),
-    DrawLineEx: ray.define('DrawLineEx', void, _Vector2, _Vector2, float, _Color),
-    DrawLineBezier: ray.define('DrawLineBezier', void, _Vector2, _Vector2, float, _Color),
-    DrawLineBezierQuad: ray.define('DrawLineBezierQuad', void, _Vector2, _Vector2, _Vector2, float, _Color),
-    DrawLineBezierCubic: ray.define('DrawLineBezierCubic', void, _Vector2, _Vector2, _Vector2, _Vector2, float, _Color),
-    DrawLineStrip: ray.define('DrawLineStrip', void, _Vector2, int, _Color),
-    DrawCircle: ray.define('DrawCircle', void, int, int, float, _Color),
-    DrawCircleSector: ray.define('DrawCircleSector', void, _Vector2, float, float, float, int, _Color),
-    DrawCircleSectorLines: ray.define('DrawCircleSectorLines', void, _Vector2, float, float, float, int, _Color),
-    DrawCircleGradient: ray.define('DrawCircleGradient', void, int, int, float, _Color, _Color),
-    DrawCircleV: ray.define('DrawCircleV', void, _Vector2, float, _Color),
-    DrawCircleLines: ray.define('DrawCircleLines', void, int, int, float, _Color),
-    DrawEllipse: ray.define('DrawEllipse', void, int, int, float, float, _Color),
-    DrawEllipseLines: ray.define('DrawEllipseLines', void, int, int, float, float, _Color),
-    DrawRing: ray.define('DrawRing', void, _Vector2, float, float, float, float, int, _Color),
-    DrawRingLines: ray.define('DrawRingLines', void, _Vector2, float, float, float, float, int, _Color),
-    DrawRectangle: ray.define('DrawRectangle', void, int, int, int, int, _Color),                        
-    DrawRectangleV: ray.define('DrawRectangleV', void, _Vector2, _Vector2, _Color),                                  
-    DrawRectangleRec: ray.define('DrawRectangleRec', void, _Rectangle, _Color),                                                 
-    DrawRectanglePro: ray.define('DrawRectanglePro', void, _Rectangle, _Vector2, float, _Color),                 
-    DrawRectangleGradientV: ray.define('DrawRectangleGradientV', void, int, int, int, int, _Color, _Color),
-    DrawRectangleGradientH: ray.define('DrawRectangleGradientH', void, int, int, int, int, _Color, _Color),
-    DrawRectangleGradientEx: ray.define('DrawRectangleGradientEx', void, _Rectangle, _Color, _Color, _Color, _Color),       
-    DrawRectangleLines: ray.define('DrawRectangleLines', void, int, int, int, int, _Color),                   
-    DrawRectangleLinesEx: ray.define('DrawRectangleLinesEx', void, _Rectangle, float, _Color),                            
-    DrawRectangleRounded: ray.define('DrawRectangleRounded', void, _Rectangle, float, int, _Color),              
-    DrawRectangleRoundedLines: ray.define('DrawRectangleRoundedLines', void, _Rectangle, float, int, float, _Color), 
-    DrawTriangle: ray.define('DrawTriangle', void, _Vector2, _Vector2, _Vector2, _Color),                                
-    DrawTriangleLines: ray.define('DrawTriangleLines', void, _Vector2, _Vector2, _Vector2, _Color),                           
-    DrawTriangleFan: ray.define('DrawTriangleFan', void, _Vector2, int, _Color),                                
-    DrawTriangleStrip: ray.define('DrawTriangleStrip', void, _Vector2, int, _Color),                              
-    DrawPoly: ray.define('DrawPoly', void, _Vector2, int, float, float, _Color),               
-    DrawPolyLines: ray.define('DrawPolyLines', void, _Vector2, int, float, float, _Color),          
-    DrawPolyLinesEx: ray.define('DrawPolyLinesEx', void, _Vector2, int, float, float, float, _Color), 
+    DrawPixel: ray.define('DrawPixel', void, int, int, ColorType),
+    DrawPixelV: ray.define('DrawPixelV', void, Vector2Type, ColorType),
+    DrawLine: ray.define('DrawLine', void, int, int, int, int, ColorType),
+    DrawLineV: ray.define('DrawLineV', void, Vector2Type, Vector2Type, ColorType),
+    DrawLineEx: ray.define('DrawLineEx', void, Vector2Type, Vector2Type, float, ColorType),
+    DrawLineBezier: ray.define('DrawLineBezier', void, Vector2Type, Vector2Type, float, ColorType),
+    DrawLineBezierQuad: ray.define('DrawLineBezierQuad', void, Vector2Type, Vector2Type, Vector2Type, float, ColorType),
+    DrawLineBezierCubic: ray.define('DrawLineBezierCubic', void, Vector2Type, Vector2Type, Vector2Type, Vector2Type, float, ColorType),
+    DrawLineStrip: ray.define('DrawLineStrip', void, Vector2Type, int, ColorType),
+    DrawCircle: ray.define('DrawCircle', void, int, int, float, ColorType),
+    DrawCircleSector: ray.define('DrawCircleSector', void, Vector2Type, float, float, float, int, ColorType),
+    DrawCircleSectorLines: ray.define('DrawCircleSectorLines', void, Vector2Type, float, float, float, int, ColorType),
+    DrawCircleGradient: ray.define('DrawCircleGradient', void, int, int, float, ColorType, ColorType),
+    DrawCircleV: ray.define('DrawCircleV', void, Vector2Type, float, ColorType),
+    DrawCircleLines: ray.define('DrawCircleLines', void, int, int, float, ColorType),
+    DrawEllipse: ray.define('DrawEllipse', void, int, int, float, float, ColorType),
+    DrawEllipseLines: ray.define('DrawEllipseLines', void, int, int, float, float, ColorType),
+    DrawRing: ray.define('DrawRing', void, Vector2Type, float, float, float, float, int, ColorType),
+    DrawRingLines: ray.define('DrawRingLines', void, Vector2Type, float, float, float, float, int, ColorType),
+    DrawRectangle: ray.define('DrawRectangle', void, int, int, int, int, ColorType),                        
+    DrawRectangleV: ray.define('DrawRectangleV', void, Vector2Type, Vector2Type, ColorType),                                  
+    DrawRectangleRec: ray.define('DrawRectangleRec', void, RectangleType, ColorType),                                                 
+    DrawRectanglePro: ray.define('DrawRectanglePro', void, RectangleType, Vector2Type, float, ColorType),                 
+    DrawRectangleGradientV: ray.define('DrawRectangleGradientV', void, int, int, int, int, ColorType, ColorType),
+    DrawRectangleGradientH: ray.define('DrawRectangleGradientH', void, int, int, int, int, ColorType, ColorType),
+    DrawRectangleGradientEx: ray.define('DrawRectangleGradientEx', void, RectangleType, ColorType, ColorType, ColorType, ColorType),       
+    DrawRectangleLines: ray.define('DrawRectangleLines', void, int, int, int, int, ColorType),                   
+    DrawRectangleLinesEx: ray.define('DrawRectangleLinesEx', void, RectangleType, float, ColorType),                            
+    DrawRectangleRounded: ray.define('DrawRectangleRounded', void, RectangleType, float, int, ColorType),              
+    DrawRectangleRoundedLines: ray.define('DrawRectangleRoundedLines', void, RectangleType, float, int, float, ColorType), 
+    DrawTriangle: ray.define('DrawTriangle', void, Vector2Type, Vector2Type, Vector2Type, ColorType),                                
+    DrawTriangleLines: ray.define('DrawTriangleLines', void, Vector2Type, Vector2Type, Vector2Type, ColorType),                           
+    DrawTriangleFan: ray.define('DrawTriangleFan', void, Vector2Type, int, ColorType),                                
+    DrawTriangleStrip: ray.define('DrawTriangleStrip', void, Vector2Type, int, ColorType),                              
+    DrawPoly: ray.define('DrawPoly', void, Vector2Type, int, float, float, ColorType),               
+    DrawPolyLines: ray.define('DrawPolyLines', void, Vector2Type, int, float, float, ColorType),          
+    DrawPolyLinesEx: ray.define('DrawPolyLinesEx', void, Vector2Type, int, float, float, float, ColorType), 
 
     # Basic shapes collision detection functions
-    CheckCollisionRecs: ray.define('CheckCollisionRecs', bool, _Rectangle, _Rectangle),                                           
-    CheckCollisionCircles: ray.define('CheckCollisionCircles', bool, _Vector2, float, _Vector2, float),        
-    CheckCollisionCircleRec: ray.define('CheckCollisionCircleRec', bool, _Vector2, float, _Rectangle),                         
-    CheckCollisionPointRec: ray.define('CheckCollisionPointRec', bool, _Vector2, _Rectangle),                                         
-    CheckCollisionPointCircle: ray.define('CheckCollisionPointCircle', bool, _Vector2, _Vector2, float),                       
-    CheckCollisionPointTriangle: ray.define('CheckCollisionPointTriangle', bool, _Vector2, _Vector2, _Vector2, _Vector2),               
-    CheckCollisionPointPoly: ray.define('CheckCollisionPointPoly', bool, _Vector2, _Vector2, int),                      
-    CheckCollisionLines: ray.define('CheckCollisionLines', bool, _Vector2, _Vector2, _Vector2, _Vector2, _Vector2), 
-    CheckCollisionPointLine: ray.define('CheckCollisionPointLine', bool, _Vector2, _Vector2, _Vector2, int),                
-    GetCollisionRec: ray.define('GetCollisionRec', _Rectangle, _Rectangle, _Rectangle),                                         
+    CheckCollisionRecs: ray.define('CheckCollisionRecs', bool, RectangleType, RectangleType),                                           
+    CheckCollisionCircles: ray.define('CheckCollisionCircles', bool, Vector2Type, float, Vector2Type, float),        
+    CheckCollisionCircleRec: ray.define('CheckCollisionCircleRec', bool, Vector2Type, float, RectangleType),                         
+    CheckCollisionPointRec: ray.define('CheckCollisionPointRec', bool, Vector2Type, RectangleType),                                         
+    CheckCollisionPointCircle: ray.define('CheckCollisionPointCircle', bool, Vector2Type, Vector2Type, float),                       
+    CheckCollisionPointTriangle: ray.define('CheckCollisionPointTriangle', bool, Vector2Type, Vector2Type, Vector2Type, Vector2Type),               
+    CheckCollisionPointPoly: ray.define('CheckCollisionPointPoly', bool, Vector2Type, Vector2Type, int),                      
+    CheckCollisionLines: ray.define('CheckCollisionLines', bool, Vector2Type, Vector2Type, Vector2Type, Vector2Type, Vector2Type), 
+    CheckCollisionPointLine: ray.define('CheckCollisionPointLine', bool, Vector2Type, Vector2Type, Vector2Type, int),                
+    GetCollisionRec: ray.define('GetCollisionRec', RectangleType, RectangleType, RectangleType),                                         
 
     /**
      * rtexture
      */
     # Image loading functions
     # NOTE: These functions do not require GPU access
-    LoadImage: ray.define('LoadImage', _Image, char_ptr),                                                             
-    LoadImageRaw: ray.define('LoadImageRaw', _Image, char_ptr, int, int, int, int),       
-    LoadImageAnim: ray.define('LoadImageAnim', _Image, char_ptr, int),                                            
-    LoadImageFromMemory: ray.define('LoadImageFromMemory', _Image, char_ptr, char, int),      
-    LoadImageFromTexture: ray.define('LoadImageFromTexture', _Image, _Texture2D),                                                     
-    LoadImageFromScreen: ray.define('LoadImageFromScreen', _Image, void),                                                                   
-    IsImageReady: ray.define('IsImageReady', bool, _Image),                                                                    
-    UnloadImage: ray.define('UnloadImage', void, _Image),                                                                     
-    ExportImage: ray.define('ExportImage', bool, _Image, char_ptr),                                               
-    ExportImageAsCode: ray.define('ExportImageAsCode', bool, _Image, char_ptr),                                         
+    LoadImage: ray.define('LoadImage', ImageType, char_ptr),                                                             
+    LoadImageRaw: ray.define('LoadImageRaw', ImageType, char_ptr, int, int, int, int),       
+    LoadImageAnim: ray.define('LoadImageAnim', ImageType, char_ptr, int),                                            
+    LoadImageFromMemory: ray.define('LoadImageFromMemory', ImageType, char_ptr, char, int),      
+    LoadImageFromTexture: ray.define('LoadImageFromTexture', ImageType, Texture2DType),                                                     
+    LoadImageFromScreen: ray.define('LoadImageFromScreen', ImageType, void),                                                                   
+    IsImageReady: ray.define('IsImageReady', bool, ImageType),                                                                    
+    UnloadImage: ray.define('UnloadImage', void, ImageType),                                                                     
+    ExportImage: ray.define('ExportImage', bool, ImageType, char_ptr),                                               
+    ExportImageAsCode: ray.define('ExportImageAsCode', bool, ImageType, char_ptr),                                         
 
     # Image generation functions
-    GenImageColor: ray.define('GenImageColor', _Image, int, int, _Color),                                           
-    GenImageGradientV: ray.define('GenImageGradientV', _Image, int, int, _Color, _Color),                           
-    GenImageGradientH: ray.define('GenImageGradientH', _Image, int, int, _Color, _Color),                           
-    GenImageGradientRadial: ray.define('GenImageGradientRadial', _Image, int, int, float, _Color, _Color),      
-    GenImageChecked: ray.define('GenImageChecked', _Image, int, int, int, int, _Color, _Color),    
-    GenImageWhiteNoise: ray.define('GenImageWhiteNoise', _Image, int, int, float),                                     
-    GenImagePerlinNoise: ray.define('GenImagePerlinNoise', _Image, int, int, int, int, float),           
-    GenImageCellular: ray.define('GenImageCellular', _Image, int, int, int),                                       
-    GenImageText: ray.define('GenImageText', _Image, int, int, char_ptr),                                       
+    GenImageColor: ray.define('GenImageColor', ImageType, int, int, ColorType),                                           
+    GenImageGradientV: ray.define('GenImageGradientV', ImageType, int, int, ColorType, ColorType),                           
+    GenImageGradientH: ray.define('GenImageGradientH', ImageType, int, int, ColorType, ColorType),                           
+    GenImageGradientRadial: ray.define('GenImageGradientRadial', ImageType, int, int, float, ColorType, ColorType),      
+    GenImageChecked: ray.define('GenImageChecked', ImageType, int, int, int, int, ColorType, ColorType),    
+    GenImageWhiteNoise: ray.define('GenImageWhiteNoise', ImageType, int, int, float),                                     
+    GenImagePerlinNoise: ray.define('GenImagePerlinNoise', ImageType, int, int, int, int, float),           
+    GenImageCellular: ray.define('GenImageCellular', ImageType, int, int, int),                                       
+    GenImageText: ray.define('GenImageText', ImageType, int, int, char_ptr),                                       
 
     # Image manipulation functions
-    ImageCopy: ray.define('ImageCopy', _Image, _Image),                                                                      
-    ImageFromImage: ray.define('ImageFromImage', _Image, _Image, _Rectangle),                                                  
-    ImageText: ray.define('ImageText', _Image, char_ptr, int, _Color),                                      
-    ImageTextEx: ray.define('ImageTextEx', _Image, _Font, char_ptr, float, float, _Color),         
-    ImageFormat: ray.define('ImageFormat', void, ptr, int),  # ptr: Image                                                   
-    ImageToPOT: ray.define('ImageToPOT', void, ptr, _Color),  # ptr: Image                                                        
-    ImageCrop: ray.define('ImageCrop', void, ptr, _Rectangle), # ptr: Image                                                     
-    ImageAlphaCrop: ray.define('ImageAlphaCrop', void, ptr, float),   # ptr: Image                                               
-    ImageAlphaClear: ray.define('ImageAlphaClear', void, ptr, _Color, float),     # ptr: Image                               
-    ImageAlphaMask: ray.define('ImageAlphaMask', void, ptr, _Image),    # ptr: Image                                              
-    ImageAlphaPremultiply: ray.define('ImageAlphaPremultiply', void, ptr),   # ptr: Image                                                          
-    ImageBlurGaussian: ray.define('ImageBlurGaussian', void, ptr, int),   # ptr: Image                                                
-    ImageResize: ray.define('ImageResize', void, ptr, int, int),    # ptr: Image                                     
-    ImageResizeNN: ray.define('ImageResizeNN', void, ptr, int,int),     # ptr: Image                                   
-    ImageResizeCanvas: ray.define('ImageResizeCanvas', void, ptr, int, int, int, int, _Color),    # ptr: Image
-    ImageMipmaps: ray.define('ImageMipmaps', void, ptr),   # ptr: Image                                                                   
+    ImageCopy: ray.define('ImageCopy', ImageType, ImageType),                                                                      
+    ImageFromImage: ray.define('ImageFromImage', ImageType, ImageType, RectangleType),                                                  
+    ImageText: ray.define('ImageText', ImageType, char_ptr, int, ColorType),                                      
+    ImageTextEx: ray.define('ImageTextEx', ImageType, FontType, char_ptr, float, float, ColorType),         
+    ImageFormat: ray.define('ImageFormat', void, ptr, int),
+    ImageToPOT: ray.define('ImageToPOT', void, ptr, ColorType),
+    ImageCrop: ray.define('ImageCrop', void, ptr, RectangleType),
+    ImageAlphaCrop: ray.define('ImageAlphaCrop', void, ptr, float),
+    ImageAlphaClear: ray.define('ImageAlphaClear', void, ptr, ColorType, float),
+    ImageAlphaMask: ray.define('ImageAlphaMask', void, ptr, ImageType),
+    ImageAlphaPremultiply: ray.define('ImageAlphaPremultiply', void, ptr),
+    ImageBlurGaussian: ray.define('ImageBlurGaussian', void, ptr, int),
+    ImageResize: ray.define('ImageResize', void, ptr, int, int),
+    ImageResizeNN: ray.define('ImageResizeNN', void, ptr, int,int),
+    ImageResizeCanvas: ray.define('ImageResizeCanvas', void, ptr, int, int, int, int, ColorType),
+    ImageMipmaps: ray.define('ImageMipmaps', void, ptr),
     ImageDither: ray.define('ImageDither', void, ptr, int, int, int, int),                            
-    ImageFlipVertical: ray.define('ImageFlipVertical', void, ptr),   # ptr: Image                                                              
-    ImageFlipHorizontal: ray.define('ImageFlipHorizontal', void, ptr),   # ptr: Image                                                            
-    ImageRotateCW: ray.define('ImageRotateCW', void, ptr),   # ptr: Image                                                                 
-    ImageRotateCCW: ray.define('ImageRotateCCW', void, ptr),   # ptr: Image                                                                 
-    ImageColorTint: ray.define('ImageColorTint', void, ptr, _Color),    # ptr: Image                                                  
-    ImageColorInvert: ray.define('ImageColorInvert', void, ptr),   # ptr: Image                                                               
-    ImageColorGrayscale: ray.define('ImageColorGrayscale', void, ptr),   # ptr: Image                                                            
-    ImageColorContrast: ray.define('ImageColorContrast', void, ptr, float),   # ptr: Image                                             
-    ImageColorBrightness: ray.define('ImageColorBrightness', void, ptr, int),   # ptr: Image                                           
-    ImageColorReplace: ray.define('ImageColorReplace', void, ptr, _Color, _Color),    # ptr: Image                                
-    LoadImageColors: ray.define('LoadImageColors', ptr, ptr),   # ptr: Color, Image                                                               
-    LoadImagePalette: ray.define('LoadImagePalette', ptr, ptr, int, int),    # ptr: Color, Image                       
-    UnloadImageColors: ray.define('UnloadImageColors', void, ptr),   # ptr: Colors                                                             
-    UnloadImagePalette: ray.define('UnloadImagePalette', void, ptr),   # ptr: Colors                                                            
-    GetImageAlphaBorder: ray.define('GetImageAlphaBorder', _Rectangle, _Image, float),                                       
-    GetImageColor: ray.define('GetImageColor', _Color, _Image, int, int),                                                    
+    ImageFlipVertical: ray.define('ImageFlipVertical', void, ptr),
+    ImageFlipHorizontal: ray.define('ImageFlipHorizontal', void, ptr),
+    ImageRotateCW: ray.define('ImageRotateCW', void, ptr),
+    ImageRotateCCW: ray.define('ImageRotateCCW', void, ptr),
+    ImageColorTint: ray.define('ImageColorTint', void, ptr, ColorType),
+    ImageColorInvert: ray.define('ImageColorInvert', void, ptr),
+    ImageColorGrayscale: ray.define('ImageColorGrayscale', void, ptr),
+    ImageColorContrast: ray.define('ImageColorContrast', void, ptr, float),
+    ImageColorBrightness: ray.define('ImageColorBrightness', void, ptr, int),
+    ImageColorReplace: ray.define('ImageColorReplace', void, ptr, ColorType, ColorType),
+    LoadImageColors: ray.define('LoadImageColors', ptr, ptr),
+    LoadImagePalette: ray.define('LoadImagePalette', ptr, ptr, int, int),
+    UnloadImageColors: ray.define('UnloadImageColors', void, ptr),
+    UnloadImagePalette: ray.define('UnloadImagePalette', void, ptr),
+    GetImageAlphaBorder: ray.define('GetImageAlphaBorder', RectangleType, ImageType, float),                                       
+    GetImageColor: ray.define('GetImageColor', ColorType, ImageType, int, int),                                                    
 
     # Image drawing functions
     # NOTE: Image software-rendering functions (CPU)
-    ImageClearBackground: ray.define('ImageClearBackground', void, ptr, _Color),  # ptr: Image                                                
-    ImageDrawPixel: ray.define('ImageDrawPixel', void, ptr, int, int, _Color),  # ptr: Image                                  
-    ImageDrawPixelV: ray.define('ImageDrawPixelV', void, ptr, _Vector2, _Color),  # ptr: Image                                   
-    ImageDrawLine: ray.define('ImageDrawLine', void, ptr, int, int, int, int, _Color),  # ptr: Image 
-    ImageDrawLineV: ray.define('ImageDrawLineV', void, ptr, _Vector2, _Vector2, _Color),   # ptr: Image                         
-    ImageDrawCircle: ray.define('ImageDrawCircle', void, ptr, int, int, int, _Color),  # ptr: Image               
-    ImageDrawCircleV: ray.define('ImageDrawCircleV', void, ptr, _Vector2, int, _Color),   # ptr: Image                       
-    ImageDrawCircleLines: ray.define('ImageDrawCircleLines', void, ptr, int, int, int, _Color),    # ptr: Image        
-    ImageDrawCircleLinesV: ray.define('ImageDrawCircleLinesV', void, ptr, _Vector2, int, _Color),   # ptr: Image                  
-    ImageDrawRectangle: ray.define('ImageDrawRectangle', void, ptr, int, int, int, int, _Color),   # ptr: Image      
-    ImageDrawRectangleV: ray.define('ImageDrawRectangleV', void, ptr, _Vector2, _Vector2, _Color),   # ptr: Image                
-    ImageDrawRectangleRec: ray.define('ImageDrawRectangleRec', void, ptr, _Rectangle, _Color),   # ptr: Image                               
-    ImageDrawRectangleLines: ray.define('ImageDrawRectangleLines', void, ptr, _Rectangle, int, _Color),   # ptr: Image                  
-    ImageDraw: ray.define('ImageDraw', void, ptr, _Image, _Rectangle, _Rectangle, _Color),    # ptr: Image           
-    ImageDrawText: ray.define('ImageDrawText', void, ptr, char_ptr, int, int, int, _Color),   # ptr: Image  
-    ImageDrawTextEx: ray.define('ImageDrawTextEx', void, ptr, _Font, char_ptr, _Vector2, float, float, _Color),   # ptr: Image
+    ImageClearBackground: ray.define('ImageClearBackground', void, ptr, ColorType),
+    ImageDrawPixel: ray.define('ImageDrawPixel', void, ptr, int, int, ColorType),
+    ImageDrawPixelV: ray.define('ImageDrawPixelV', void, ptr, Vector2Type, ColorType),
+    ImageDrawLine: ray.define('ImageDrawLine', void, ptr, int, int, int, int, ColorType),
+    ImageDrawLineV: ray.define('ImageDrawLineV', void, ptr, Vector2Type, Vector2Type, ColorType),
+    ImageDrawCircle: ray.define('ImageDrawCircle', void, ptr, int, int, int, ColorType),
+    ImageDrawCircleV: ray.define('ImageDrawCircleV', void, ptr, Vector2Type, int, ColorType),
+    ImageDrawCircleLines: ray.define('ImageDrawCircleLines', void, ptr, int, int, int, ColorType),
+    ImageDrawCircleLinesV: ray.define('ImageDrawCircleLinesV', void, ptr, Vector2Type, int, ColorType),
+    ImageDrawRectangle: ray.define('ImageDrawRectangle', void, ptr, int, int, int, int, ColorType),
+    ImageDrawRectangleV: ray.define('ImageDrawRectangleV', void, ptr, Vector2Type, Vector2Type, ColorType),
+    ImageDrawRectangleRec: ray.define('ImageDrawRectangleRec', void, ptr, RectangleType, ColorType),
+    ImageDrawRectangleLines: ray.define('ImageDrawRectangleLines', void, ptr, RectangleType, int, ColorType),
+    ImageDraw: ray.define('ImageDraw', void, ptr, ImageType, RectangleType, RectangleType, ColorType),
+    ImageDrawText: ray.define('ImageDrawText', void, ptr, char_ptr, int, int, int, ColorType),
+    ImageDrawTextEx: ray.define('ImageDrawTextEx', void, ptr, FontType, char_ptr, Vector2Type, float, float, ColorType),
 
     # Texture loading functions
     # NOTE: These functions require GPU access
-    LoadTexture: ray.define('LoadTexture', _Texture2D, char_ptr),                                                       
-    LoadTextureFromImage: ray.define('LoadTextureFromImage', _Texture2D, _Image),                                                       
-    LoadTextureCubemap: ray.define('LoadTextureCubemap', _TextureCubemap, _Image, int),                                        
-    LoadRenderTexture: ray.define('LoadRenderTexture', _RenderTexture2D, int, int),                                          
-    IsTextureReady: ray.define('IsTextureReady', bool, _Texture2D),                                                            
-    UnloadTexture: ray.define('UnloadTexture', void, _Texture2D),                                                             
-    IsRenderTextureReady: ray.define('IsRenderTextureReady', bool, _RenderTexture2D),                                                       
-    UnloadRenderTexture: ray.define('UnloadRenderTexture', void, _RenderTexture2D),                                                  
-    UpdateTexture: ray.define('UpdateTexture', void, _Texture2D, ptr),                                         
-    UpdateTextureRec: ray.define('UpdateTextureRec', void, _Texture2D, _Rectangle, ptr),                       
+    LoadTexture: ray.define('LoadTexture', Texture2DType, char_ptr),                                                       
+    LoadTextureFromImage: ray.define('LoadTextureFromImage', Texture2DType, ImageType),                                                       
+    LoadTextureCubemap: ray.define('LoadTextureCubemap', TextureCubemapType, ImageType, int),                                        
+    LoadRenderTexture: ray.define('LoadRenderTexture', RenderTexture2DType, int, int),                                          
+    IsTextureReady: ray.define('IsTextureReady', bool, Texture2DType),                                                            
+    UnloadTexture: ray.define('UnloadTexture', void, Texture2DType),                                                             
+    IsRenderTextureReady: ray.define('IsRenderTextureReady', bool, RenderTexture2DType),                                                       
+    UnloadRenderTexture: ray.define('UnloadRenderTexture', void, RenderTexture2DType),                                                  
+    UpdateTexture: ray.define('UpdateTexture', void, Texture2DType, ptr),                                         
+    UpdateTextureRec: ray.define('UpdateTextureRec', void, Texture2DType, RectangleType, ptr),                       
 
     # Texture configuration functions
-    GenTextureMipmaps: ray.define('GenTextureMipmaps', void, ptr),   # ptr: Texture2D                                                        
-    SetTextureFilter: ray.define('SetTextureFilter', void, _Texture2D, int),                                              
-    SetTextureWrap: ray.define('SetTextureWrap', void, _Texture2D, int),                                                  
+    GenTextureMipmaps: ray.define('GenTextureMipmaps', void, ptr),
+    SetTextureFilter: ray.define('SetTextureFilter', void, Texture2DType, int),                                              
+    SetTextureWrap: ray.define('SetTextureWrap', void, Texture2DType, int),                                                  
 
     # Texture drawing functions
-    DrawTexture: ray.define('DrawTexture', void, _Texture2D, int, int, _Color),                               
-    DrawTextureV: ray.define('DrawTextureV', void, _Texture2D, _Vector2, _Color),                                
-    DrawTextureEx: ray.define('DrawTextureEx', void, _Texture2D, _Vector2, float, float, _Color),  
-    DrawTextureRec: ray.define('DrawTextureRec', void, _Texture2D, _Rectangle, _Vector2, _Color),            
-    DrawTexturePro: ray.define('DrawTexturePro', void, _Texture2D, _Rectangle, _Rectangle, _Vector2, float, _Color), 
-    DrawTextureNPatch: ray.define('DrawTextureNPatch', void, _Texture2D, _NPatchInfo, _Rectangle, _Vector2, float, _Color), 
+    DrawTexture: ray.define('DrawTexture', void, Texture2DType, int, int, ColorType),                               
+    DrawTextureV: ray.define('DrawTextureV', void, Texture2DType, Vector2Type, ColorType),                                
+    DrawTextureEx: ray.define('DrawTextureEx', void, Texture2DType, Vector2Type, float, float, ColorType),  
+    DrawTextureRec: ray.define('DrawTextureRec', void, Texture2DType, RectangleType, Vector2Type, ColorType),            
+    DrawTexturePro: ray.define('DrawTexturePro', void, Texture2DType, RectangleType, RectangleType, Vector2Type, float, ColorType), 
+    DrawTextureNPatch: ray.define('DrawTextureNPatch', void, Texture2DType, NPatchInfoType, RectangleType, Vector2Type, float, ColorType), 
 
     # Color/pixel related functions
-    Fade: ray.define('Fade', _Color, _Color, float),                                 
-    ColorToInt: ray.define('ColorToInt', int, _Color),                                          
-    ColorNormalize: ray.define('ColorNormalize', _Vector4, _Color),                                  
-    ColorFromNormalized: ray.define('ColorFromNormalized', _Color, _Vector4),                        
-    ColorToHSV: ray.define('ColorToHSV', _Vector3, _Color),                                      
-    ColorFromHSV: ray.define('ColorFromHSV', _Color, float, float, float),         
-    ColorTint: ray.define('ColorTint', _Color, _Color, _Color),                             
-    ColorBrightness: ray.define('ColorBrightness', _Color, _Color, float),                     
-    ColorContrast: ray.define('ColorContrast', _Color, _Color, float),                     
-    ColorAlpha: ray.define('ColorAlpha', _Color, _Color, float),                           
-    ColorAlphaBlend: ray.define('ColorAlphaBlend', _Color, _Color, _Color, _Color),              
-    GetColor: ray.define('GetColor', _Color, uint),                                
-    GetPixelColor: ray.define('GetPixelColor', _Color, ptr, int),    # ptr: void                      
-    SetPixelColor: ray.define('SetPixelColor', void, ptr, _Color, int),    # ptr: void          
+    Fade: ray.define('Fade', ColorType, ColorType, float),                                 
+    ColorToInt: ray.define('ColorToInt', int, ColorType),                                          
+    ColorNormalize: ray.define('ColorNormalize', Vector4Type, ColorType),                                  
+    ColorFromNormalized: ray.define('ColorFromNormalized', ColorType, Vector4Type),                        
+    ColorToHSV: ray.define('ColorToHSV', Vector3Type, ColorType),                                      
+    ColorFromHSV: ray.define('ColorFromHSV', ColorType, float, float, float),         
+    ColorTint: ray.define('ColorTint', ColorType, ColorType, ColorType),                             
+    ColorBrightness: ray.define('ColorBrightness', ColorType, ColorType, float),                     
+    ColorContrast: ray.define('ColorContrast', ColorType, ColorType, float),                     
+    ColorAlpha: ray.define('ColorAlpha', ColorType, ColorType, float),                           
+    ColorAlphaBlend: ray.define('ColorAlphaBlend', ColorType, ColorType, ColorType, ColorType),              
+    GetColor: ray.define('GetColor', ColorType, uint),                                
+    GetPixelColor: ray.define('GetPixelColor', ColorType, ptr, int),
+    SetPixelColor: ray.define('SetPixelColor', void, ptr, ColorType, int),
     GetPixelDataSize: ray.define('GetPixelDataSize', int, int, int, int),              
 
     /**
      * rtext
      */
     # Font loading/unloading functions
-    GetFontDefault: ray.define('GetFontDefault', _Font),                                                            
-    LoadFont: ray.define('LoadFont', _Font, char_ptr),                                                  
-    LoadFontEx: ray.define('LoadFontEx', _Font, char_ptr, int, ptr, int),  
-    LoadFontFromImage: ray.define('LoadFontFromImage', _Font, _Image, _Color, int),                        
-    LoadFontFromMemory: ray.define('LoadFontFromMemory', _Font, char_ptr, uchar_ptr, int, int, ptr, int), 
-    IsFontReady: ray.define('IsFontReady', bool, _Font),                                                          
-    LoadFontData: ray.define('LoadFontData', ptr, uchar_ptr, int, int, ptr, int, int), # ptr: GlyphInfo, int
-    GenImageFontAtlas: ray.define('GenImageFontAtlas', _Image, ptr, ptr, int, int, int, int),  # ptr: GlyphInfo, List<Rectangle>
+    GetFontDefault: ray.define('GetFontDefault', FontType),                                                            
+    LoadFont: ray.define('LoadFont', FontType, char_ptr),                                                  
+    LoadFontEx: ray.define('LoadFontEx', FontType, char_ptr, int, ptr, int),  
+    LoadFontFromImage: ray.define('LoadFontFromImage', FontType, ImageType, ColorType, int),                        
+    LoadFontFromMemory: ray.define('LoadFontFromMemory', FontType, char_ptr, uchar_ptr, int, int, ptr, int), 
+    IsFontReady: ray.define('IsFontReady', bool, FontType),                                                          
+    LoadFontData: ray.define('LoadFontData', ptr, uchar_ptr, int, int, ptr, int, int),
+    GenImageFontAtlas: ray.define('GenImageFontAtlas', ImageType, ptr, ptr, int, int, int, int),
     UnloadFontData: ray.define('UnloadFontData', void, ptr, int),                                
-    UnloadFont: ray.define('UnloadFont', void, _Font),                                                           
-    ExportFontAsCode: ray.define('ExportFontAsCode', bool, _Font, char_ptr),                               
+    UnloadFont: ray.define('UnloadFont', void, FontType),                                                           
+    ExportFontAsCode: ray.define('ExportFontAsCode', bool, FontType, char_ptr),                               
 
     #  Text drawing functions
     DrawFPS: ray.define('DrawFPS', void, int, int),                                                     
-    DrawText: ray.define('DrawText', void, char_ptr, int, int, int, _Color),       
-    DrawTextEx: ray.define('DrawTextEx', void, _Font, char_ptr, _Vector2, float, float, _Color), 
-    DrawTextPro: ray.define('DrawTextPro', void, _Font, char_ptr, _Vector2, _Vector2, float, float, float, _Color), 
-    DrawTextCodepoint: ray.define('DrawTextCodepoint', void, _Font, int, _Vector2, float, _Color), 
-    DrawTextCodepoints: ray.define('DrawTextCodepoints', void, _Font, ptr, int, _Vector2, float, float, _Color), # ptr: int
+    DrawText: ray.define('DrawText', void, char_ptr, int, int, int, ColorType),       
+    DrawTextEx: ray.define('DrawTextEx', void, FontType, char_ptr, Vector2Type, float, float, ColorType), 
+    DrawTextPro: ray.define('DrawTextPro', void, FontType, char_ptr, Vector2Type, Vector2Type, float, float, float, ColorType), 
+    DrawTextCodepoint: ray.define('DrawTextCodepoint', void, FontType, int, Vector2Type, float, ColorType), 
+    DrawTextCodepoints: ray.define('DrawTextCodepoints', void, FontType, ptr, int, Vector2Type, float, float, ColorType),
 
     #  Text font info functions
     MeasureText: ray.define('MeasureText', int, char_ptr, int),                                      
-    MeasureTextEx: ray.define('MeasureTextEx', _Vector2, _Font, char_ptr, float, float),    
-    GetGlyphIndex: ray.define('GetGlyphIndex', int, _Font, int),                                          
-    GetGlyphInfo: ray.define('GetGlyphInfo', _GlyphInfo, _Font, int),                                     
-    GetGlyphAtlasRec: ray.define('GetGlyphAtlasRec', _Rectangle, _Font, int),                                 
+    MeasureTextEx: ray.define('MeasureTextEx', Vector2Type, FontType, char_ptr, float, float),    
+    GetGlyphIndex: ray.define('GetGlyphIndex', int, FontType, int),                                          
+    GetGlyphInfo: ray.define('GetGlyphInfo', GlyphInfoType, FontType, int),                                     
+    GetGlyphAtlasRec: ray.define('GetGlyphAtlasRec', RectangleType, FontType, int),                                 
 
     #  Text codepoints management functions (unicode)
-    LoadUTF8: ray.define('LoadUTF8', char_ptr, ptr, int),  # ptr: int              
+    LoadUTF8: ray.define('LoadUTF8', char_ptr, ptr, int),
     UnloadUTF8: ray.define('UnloadUTF8', void, char_ptr),                                      
     LoadCodepoints: ray.define('LoadCodepoints', ptr, char_ptr, ptr),                
     UnloadCodepoints: ray.define('UnloadCodepoints', void, ptr),                           
@@ -1336,7 +1233,7 @@ def Init(debug) {
     GetCodepoint: ray.define('GetCodepoint', int, char_ptr, ptr),           
     GetCodepointNext: ray.define('GetCodepointNext', int, char_ptr, ptr),       
     GetCodepointPrevious: ray.define('GetCodepointPrevious', int, char_ptr, ptr),   
-    CodepointToUTF8: ray.define('CodepointToUTF8', char_ptr, int, ptr),  # ptr: int       
+    CodepointToUTF8: ray.define('CodepointToUTF8', char_ptr, int, ptr),
 
     #  Text strings management functions (no UTF-8, only byte)
     #  NOTE: Some strings allocate memory internally for returned, just be careful!
@@ -1347,7 +1244,7 @@ def Init(debug) {
     TextReplace: ray.define('TextReplace', char_ptr, char_ptr, char_ptr, char_ptr),                   
     TextInsert: ray.define('TextInsert', char_ptr, char_ptr, char_ptr, int),                 
     TextJoin: ray.define('TextJoin', char_ptr, char_ptr, int, char_ptr),        
-    TextSplit: ray.define('TextSplit', ptr, char_ptr, char, ptr),  # ptr: string, int               
+    TextSplit: ray.define('TextSplit', ptr, char_ptr, char, ptr),
     TextAppend: ray.define('TextAppend', void, char_ptr, char_ptr, ptr),                       
     TextFindIndex: ray.define('TextFindIndex', int, char_ptr, char_ptr),                                
     TextToUpper: ray.define('TextToUpper', char_ptr, char_ptr),                      
@@ -1356,167 +1253,167 @@ def Init(debug) {
     TextToInteger: ray.define('TextToInteger', int, char_ptr),  
 
     #  Basic geometric 3D shapes drawing functions
-    DrawLine3D: ray.define('DrawLine3D', void, _Vector3, _Vector3, _Color),                                    #  Draw a line in 3D world space
-    DrawPoint3D: ray.define('DrawPoint3D', void, _Vector3, _Color),                                                   #  Draw a point in 3D, actually a small line
-    DrawCircle3D: ray.define('DrawCircle3D', void, _Vector3, float, _Vector3, float, _Color), #  Draw a circle in 3D world space
-    DrawTriangle3D: ray.define('DrawTriangle3D', void, _Vector3, _Vector3, _Vector3, _Color),                              #  Draw a color-filled triangle (vertex in counter-clockwise order!)
-    DrawTriangleStrip3D: ray.define('DrawTriangleStrip3D', void, ptr, int, _Color),                            #  Draw a triangle strip defined by points
-    DrawCube: ray.define('DrawCube', void, _Vector3, float, float, float, _Color),             #  Draw cube
-    DrawCubeV: ray.define('DrawCubeV', void, _Vector3, _Vector3, _Color),                                       #  Draw cube (Vector version)
-    DrawCubeWires: ray.define('DrawCubeWires', void, _Vector3, float, float, float, _Color),        #  Draw cube wires
-    DrawCubeWiresV: ray.define('DrawCubeWiresV', void, _Vector3, _Vector3, _Color),                                  #  Draw cube wires (Vector version)
-    DrawSphere: ray.define('DrawSphere', void, _Vector3, float, _Color),                                     #  Draw sphere
-    DrawSphereEx: ray.define('DrawSphereEx', void, _Vector3, float, int, int, _Color),            #  Draw sphere with extended parameters
-    DrawSphereWires: ray.define('DrawSphereWires', void, _Vector3, float, int, int, _Color),         #  Draw sphere wires
-    DrawCylinder: ray.define('DrawCylinder', void, _Vector3, float, float, float, int, _Color), #  Draw a cylinder/cone
-    DrawCylinderEx: ray.define('DrawCylinderEx', void, _Vector3, _Vector3, float, float, int, _Color), #  Draw a cylinder with base at startPos and top at endPos
-    DrawCylinderWires: ray.define('DrawCylinderWires', void, _Vector3, float, float, float, int, _Color), #  Draw a cylinder/cone wires
-    DrawCylinderWiresEx: ray.define('DrawCylinderWiresEx', void, _Vector3, _Vector3, float, float, int, _Color), #  Draw a cylinder wires with base at startPos and top at endPos
-    DrawCapsule: ray.define('DrawCapsule', void, _Vector3, _Vector3, float, int, int, _Color), #  Draw a capsule with the center of its sphere caps at startPos and endPos
-    DrawCapsuleWires: ray.define('DrawCapsuleWires', void, _Vector3, _Vector3, float, int, int, _Color), #  Draw capsule wireframe with the center of its sphere caps at startPos and endPos
-    DrawPlane: ray.define('DrawPlane', void, _Vector3, _Vector2, _Color),                                      #  Draw a plane XZ
-    DrawRay: ray.define('DrawRay', void, _Ray, _Color),                                                                #  Draw a ray line
-    DrawGrid: ray.define('DrawGrid', void, int, float),                                                          #  Draw a grid (centered at (0, 0, 0))
+    DrawLine3D: ray.define('DrawLine3D', void, Vector3Type, Vector3Type, ColorType),
+    DrawPoint3D: ray.define('DrawPoint3D', void, Vector3Type, ColorType),
+    DrawCircle3D: ray.define('DrawCircle3D', void, Vector3Type, float, Vector3Type, float, ColorType),
+    DrawTriangle3D: ray.define('DrawTriangle3D', void, Vector3Type, Vector3Type, Vector3Type, ColorType),
+    DrawTriangleStrip3D: ray.define('DrawTriangleStrip3D', void, ptr, int, ColorType),
+    DrawCube: ray.define('DrawCube', void, Vector3Type, float, float, float, ColorType),
+    DrawCubeV: ray.define('DrawCubeV', void, Vector3Type, Vector3Type, ColorType),
+    DrawCubeWires: ray.define('DrawCubeWires', void, Vector3Type, float, float, float, ColorType),
+    DrawCubeWiresV: ray.define('DrawCubeWiresV', void, Vector3Type, Vector3Type, ColorType),
+    DrawSphere: ray.define('DrawSphere', void, Vector3Type, float, ColorType),
+    DrawSphereEx: ray.define('DrawSphereEx', void, Vector3Type, float, int, int, ColorType),
+    DrawSphereWires: ray.define('DrawSphereWires', void, Vector3Type, float, int, int, ColorType),
+    DrawCylinder: ray.define('DrawCylinder', void, Vector3Type, float, float, float, int, ColorType),
+    DrawCylinderEx: ray.define('DrawCylinderEx', void, Vector3Type, Vector3Type, float, float, int, ColorType),
+    DrawCylinderWires: ray.define('DrawCylinderWires', void, Vector3Type, float, float, float, int, ColorType),
+    DrawCylinderWiresEx: ray.define('DrawCylinderWiresEx', void, Vector3Type, Vector3Type, float, float, int, ColorType),
+    DrawCapsule: ray.define('DrawCapsule', void, Vector3Type, Vector3Type, float, int, int, ColorType),
+    DrawCapsuleWires: ray.define('DrawCapsuleWires', void, Vector3Type, Vector3Type, float, int, int, ColorType),
+    DrawPlane: ray.define('DrawPlane', void, Vector3Type, Vector2Type, ColorType),
+    DrawRay: ray.define('DrawRay', void, RayType, ColorType),
+    DrawGrid: ray.define('DrawGrid', void, int, float),
 
     # ------------------------------------------------------------------------------------
     #  Model 3d Loading and Drawing Functions (Module: models)
     # ------------------------------------------------------------------------------------
 
     #  Model management functions
-    LoadModel: ray.define('LoadModel', _Model, char_ptr),                                                #  Load model from files (meshes and materials)
-    LoadModelFromMesh: ray.define('LoadModelFromMesh', _Model, _Mesh),                                                   #  Load model from generated mesh (default material)
-    IsModelReady: ray.define('IsModelReady', bool, _Model),                                                       #  Check if a model is ready
-    UnloadModel: ray.define('UnloadModel', void, _Model),                                                        #  Unload model (including meshes) from memory (RAM and/or VRAM)
-    GetModelBoundingBox: ray.define('GetModelBoundingBox', _BoundingBox, _Model),                                         #  Compute model bounding box limits (considers all meshes)
+    LoadModel: ray.define('LoadModel', ModelType, char_ptr),
+    LoadModelFromMesh: ray.define('LoadModelFromMesh', ModelType, MeshType),
+    IsModelReady: ray.define('IsModelReady', bool, ModelType),
+    UnloadModel: ray.define('UnloadModel', void, ModelType),
+    GetModelBoundingBox: ray.define('GetModelBoundingBox', BoundingBoxType, ModelType),
 
     #  Model drawing functions
-    DrawModel: ray.define('DrawModel', void, _Model, _Vector3, float, _Color),               #  Draw a model (with texture if set)
-    DrawModelEx: ray.define('DrawModelEx', void, _Model, _Vector3, _Vector3, float, _Vector3, _Color), #  Draw a model with extended parameters
-    DrawModelWires: ray.define('DrawModelWires', void, _Model, _Vector3, float, _Color),          #  Draw a model wires (with texture if set)
-    DrawModelWiresEx: ray.define('DrawModelWiresEx', void, _Model, _Vector3, _Vector3, float, _Vector3, _Color), #  Draw a model wires (with texture if set) with extended parameters
-    DrawBoundingBox: ray.define('DrawBoundingBox', void, _BoundingBox, _Color),                                   #  Draw bounding box (wires)
-    DrawBillboard: ray.define('DrawBillboard', void, _Camera, _Texture2D, _Vector3, float, _Color),   #  Draw a billboard texture
-    DrawBillboardRec: ray.define('DrawBillboardRec', void, _Camera, _Texture2D, _Rectangle, _Vector3, _Vector2, _Color), #  Draw a billboard texture defined by source
-    DrawBillboardPro: ray.define('DrawBillboardPro', void, _Camera, _Texture2D, _Rectangle, _Vector3, _Vector3, _Vector2, _Vector2, float, _Color), #  Draw a billboard texture defined by source and rotation
+    DrawModel: ray.define('DrawModel', void, ModelType, Vector3Type, float, ColorType),
+    DrawModelEx: ray.define('DrawModelEx', void, ModelType, Vector3Type, Vector3Type, float, Vector3Type, ColorType),
+    DrawModelWires: ray.define('DrawModelWires', void, ModelType, Vector3Type, float, ColorType),
+    DrawModelWiresEx: ray.define('DrawModelWiresEx', void, ModelType, Vector3Type, Vector3Type, float, Vector3Type, ColorType),
+    DrawBoundingBox: ray.define('DrawBoundingBox', void, BoundingBoxType, ColorType),
+    DrawBillboard: ray.define('DrawBillboard', void, CameraType, Texture2DType, Vector3Type, float, ColorType),
+    DrawBillboardRec: ray.define('DrawBillboardRec', void, CameraType, Texture2DType, RectangleType, Vector3Type, Vector2Type, ColorType),
+    DrawBillboardPro: ray.define('DrawBillboardPro', void, CameraType, Texture2DType, RectangleType, Vector3Type, Vector3Type, Vector2Type, Vector2Type, float, ColorType),
 
     #  Mesh management functions
-    UploadMesh: ray.define('UploadMesh', void, ptr, bool),                                            #  Upload mesh vertex data in GPU and provide VAO/VBO ids
-    UpdateMeshBuffer: ray.define('UpdateMeshBuffer', void, _Mesh, int, ptr, int, int), #  Update mesh vertex data in GPU for a specific buffer index
-    UnloadMesh: ray.define('UnloadMesh', void, _Mesh),                                                           #  Unload mesh data from CPU and GPU
-    DrawMesh: ray.define('DrawMesh', void, _Mesh, _Material, _Matrix),                        #  Draw a 3d mesh with material and transform
-    DrawMeshInstanced: ray.define('DrawMeshInstanced', void, _Mesh, _Material, ptr, int), #  Draw multiple mesh instances with material and different transforms
-    ExportMesh: ray.define('ExportMesh', bool, _Mesh, char_ptr),                                     #  Export mesh data to, returns true on success
-    GetMeshBoundingBox: ray.define('GetMeshBoundingBox', _BoundingBox, _Mesh),                                            #  Compute mesh bounding box limits
-    GenMeshTangents: ray.define('GenMeshTangents', void, ptr),                                                     #  Compute mesh tangents
+    UploadMesh: ray.define('UploadMesh', void, ptr, bool),
+    UpdateMeshBuffer: ray.define('UpdateMeshBuffer', void, MeshType, int, ptr, int, int),
+    UnloadMesh: ray.define('UnloadMesh', void, MeshType),
+    DrawMesh: ray.define('DrawMesh', void, MeshType, MaterialType, MatrixType),
+    DrawMeshInstanced: ray.define('DrawMeshInstanced', void, MeshType, MaterialType, ptr, int),
+    ExportMesh: ray.define('ExportMesh', bool, MeshType, char_ptr),
+    GetMeshBoundingBox: ray.define('GetMeshBoundingBox', BoundingBoxType, MeshType),
+    GenMeshTangents: ray.define('GenMeshTangents', void, ptr),
 
     # #  Mesh generation functions
-    GenMeshPoly: ray.define('GenMeshPoly', _Mesh, int, float),                                            #  Generate polygonal mesh
-    GenMeshPlane: ray.define('GenMeshPlane', _Mesh, float, float, int, int),                     #  Generate plane mesh (with subdivisions)
-    GenMeshCube: ray.define('GenMeshCube', _Mesh, float, float, float),                            #  Generate cuboid mesh
-    GenMeshSphere: ray.define('GenMeshSphere', _Mesh, float, int, int),                              #  Generate sphere mesh (standard sphere)
-    GenMeshHemiSphere: ray.define('GenMeshHemiSphere', _Mesh, float, int, int),                          #  Generate half-sphere mesh (no bottom cap)
-    GenMeshCylinder: ray.define('GenMeshCylinder', _Mesh, float, float, int),                         #  Generate cylinder mesh
-    GenMeshCone: ray.define('GenMeshCone', _Mesh, float, float, int),                             #  Generate cone/pyramid mesh
-    GenMeshTorus: ray.define('GenMeshTorus', _Mesh, float, float, int, int),                   #  Generate torus mesh
-    GenMeshKnot: ray.define('GenMeshKnot', _Mesh, float, float, int, int),                    #  Generate trefoil knot mesh
-    GenMeshHeightmap: ray.define('GenMeshHeightmap', _Mesh, _Image, _Vector3),                                 #  Generate heightmap mesh from image data
-    GenMeshCubicmap: ray.define('GenMeshCubicmap', _Mesh, _Image, _Vector3),                               #  Generate cubes-based map mesh from image data
+    GenMeshPoly: ray.define('GenMeshPoly', MeshType, int, float),
+    GenMeshPlane: ray.define('GenMeshPlane', MeshType, float, float, int, int),
+    GenMeshCube: ray.define('GenMeshCube', MeshType, float, float, float),
+    GenMeshSphere: ray.define('GenMeshSphere', MeshType, float, int, int),
+    GenMeshHemiSphere: ray.define('GenMeshHemiSphere', MeshType, float, int, int),
+    GenMeshCylinder: ray.define('GenMeshCylinder', MeshType, float, float, int),
+    GenMeshCone: ray.define('GenMeshCone', MeshType, float, float, int),
+    GenMeshTorus: ray.define('GenMeshTorus', MeshType, float, float, int, int),
+    GenMeshKnot: ray.define('GenMeshKnot', MeshType, float, float, int, int),
+    GenMeshHeightmap: ray.define('GenMeshHeightmap', MeshType, ImageType, Vector3Type),
+    GenMeshCubicmap: ray.define('GenMeshCubicmap', MeshType, ImageType, Vector3Type),
 
     # #  Material loading/unloading functions
-    LoadMaterials: ray.define('LoadMaterials', ptr, char_ptr, ptr),                    #  Load materials from model file
-    LoadMaterialDefault: ray.define('LoadMaterialDefault', _Material, void),                                                   #  Load default material (Supports: DIFFUSE, SPECULAR, NORMAL maps)
-    IsMaterialReady: ray.define('IsMaterialReady', bool, _Material),                                              #  Check if a material is ready
-    UnloadMaterial: ray.define('UnloadMaterial', void, _Material),                                               #  Unload material from GPU memory (VRAM)
-    SetMaterialTexture: ray.define('SetMaterialTexture', void, ptr, int, _Texture2D),          #  Set texture for a material map type (MATERIAL_MAP_DIFFUSE, MATERIAL_MAP_SPECULAR...)
-    SetModelMeshMaterial: ray.define('SetModelMeshMaterial', void, ptr, int, int),                  #  Set material for a mesh
+    LoadMaterials: ray.define('LoadMaterials', ptr, char_ptr, ptr),
+    LoadMaterialDefault: ray.define('LoadMaterialDefault', MaterialType, void),
+    IsMaterialReady: ray.define('IsMaterialReady', bool, MaterialType),
+    UnloadMaterial: ray.define('UnloadMaterial', void, MaterialType),
+    SetMaterialTexture: ray.define('SetMaterialTexture', void, ptr, int, Texture2DType),
+    SetModelMeshMaterial: ray.define('SetModelMeshMaterial', void, ptr, int, int),
 
     # #  Model animations loading/unloading functions
-    LoadModelAnimations: ray.define('LoadModelAnimations', ptr, char_ptr, ptr),   #  Load model animations from file
-    UpdateModelAnimation: ray.define('UpdateModelAnimation', void, _Model, _ModelAnimation, int),               #  Update model animation pose
-    UnloadModelAnimation: ray.define('UnloadModelAnimation', void, _ModelAnimation),                                       #  Unload animation data
-    UnloadModelAnimations: ray.define('UnloadModelAnimations', void, ptr, int),           #  Unload animation array data
-    IsModelAnimationValid: ray.define('IsModelAnimationValid', bool, _Model, _ModelAnimation),                         #  Check model animation skeleton match
+    LoadModelAnimations: ray.define('LoadModelAnimations', ptr, char_ptr, ptr),
+    UpdateModelAnimation: ray.define('UpdateModelAnimation', void, ModelType, ModelAnimationType, int),
+    UnloadModelAnimation: ray.define('UnloadModelAnimation', void, ModelAnimationType),
+    UnloadModelAnimations: ray.define('UnloadModelAnimations', void, ptr, int),
+    IsModelAnimationValid: ray.define('IsModelAnimationValid', bool, ModelType, ModelAnimationType),
 
     # #  Collision detection functions
-    CheckCollisionSpheres: ray.define('CheckCollisionSpheres', bool, _Vector3, float, _Vector3, float),   #  Check collision between two spheres
-    CheckCollisionBoxes: ray.define('CheckCollisionBoxes', bool, _BoundingBox, _BoundingBox),                                 #  Check collision between two bounding boxes
-    CheckCollisionBoxSphere: ray.define('CheckCollisionBoxSphere', bool, _BoundingBox, _Vector3, float),                  #  Check collision between box and sphere
-    GetRayCollisionSphere: ray.define('GetRayCollisionSphere', _RayCollision, _Ray, _Vector3, float),                    #  Get collision info between ray and sphere
-    GetRayCollisionBox: ray.define('GetRayCollisionBox', _RayCollision, _Ray, _BoundingBox),                                    #  Get collision info between ray and box
-    GetRayCollisionMesh: ray.define('GetRayCollisionMesh', _RayCollision, _Ray, _Mesh, _Matrix),                       #  Get collision info between ray and mesh
-    GetRayCollisionTriangle: ray.define('GetRayCollisionTriangle', _RayCollision, _Ray, _Vector3, _Vector3, _Vector3),            #  Get collision info between ray and triangle
-    GetRayCollisionQuad: ray.define('GetRayCollisionQuad', _RayCollision, _Ray, _Vector3, _Vector3, _Vector3, _Vector3),    #  Get collision info between ray and quad
+    CheckCollisionSpheres: ray.define('CheckCollisionSpheres', bool, Vector3Type, float, Vector3Type, float),
+    CheckCollisionBoxes: ray.define('CheckCollisionBoxes', bool, BoundingBoxType, BoundingBoxType),
+    CheckCollisionBoxSphere: ray.define('CheckCollisionBoxSphere', bool, BoundingBoxType, Vector3Type, float),
+    GetRayCollisionSphere: ray.define('GetRayCollisionSphere', RayCollisionType, RayType, Vector3Type, float),
+    GetRayCollisionBox: ray.define('GetRayCollisionBox', RayCollisionType, RayType, BoundingBoxType),
+    GetRayCollisionMesh: ray.define('GetRayCollisionMesh', RayCollisionType, RayType, MeshType, MatrixType),
+    GetRayCollisionTriangle: ray.define('GetRayCollisionTriangle', RayCollisionType, RayType, Vector3Type, Vector3Type, Vector3Type),
+    GetRayCollisionQuad: ray.define('GetRayCollisionQuad', RayCollisionType, RayType, Vector3Type, Vector3Type, Vector3Type, Vector3Type),
 
     # ----------------------------------------------------------------
     # AUDIO
     # ----------------------------------------------------------------
     # Audio device management functions
-    InitAudioDevice: ray.define('InitAudioDevice', void),                                     # Initialize audio device and context
-    CloseAudioDevice: ray.define('CloseAudioDevice', void),                                    # Close the audio device and context
-    IsAudioDeviceReady: ray.define('IsAudioDeviceReady', bool),                                  # Check if audio device has been initialized successfully
-    SetMasterVolume: ray.define('SetMasterVolume', void, float),                             # Set master volume (listener)
+    InitAudioDevice: ray.define('InitAudioDevice', void),
+    CloseAudioDevice: ray.define('CloseAudioDevice', void),
+    IsAudioDeviceReady: ray.define('IsAudioDeviceReady', bool),
+    SetMasterVolume: ray.define('SetMasterVolume', void, float),
 
     # Wave/Sound loading/unloading functions
-    LoadWave: ray.define('LoadWave', _Wave, char_ptr),                            # Load wave data from file
-    LoadWaveFromMemory: ray.define('LoadWaveFromMemory', _Wave, char_ptr, uchar_ptr, int), # Load wave from memory, fileType refers to extension: i.e. '.wav'
-    IsWaveReady: ray.define('IsWaveReady', bool, _Wave),                                    # Checks if wave data is ready
-    LoadSound: ray.define('LoadSound', _Sound, char_ptr),                          # Load sound from file
-    LoadSoundFromWave: ray.define('LoadSoundFromWave', _Sound, _Wave),                             # Load sound from wave data
-    IsSoundReady: ray.define('IsSoundReady', bool, _Sound),                                 # Checks if a sound is ready
-    UpdateSound: ray.define('UpdateSound', void, _Sound, ptr, int), # Update sound buffer with new data
-    UnloadWave: ray.define('UnloadWave', void, _Wave),                                     # Unload wave data
-    UnloadSound: ray.define('UnloadSound', void, _Sound),                                  # Unload sound
-    ExportWave: ray.define('ExportWave', bool, _Wave, char_ptr),               # Export wave data to, returns true on success
-    ExportWaveAsCode: ray.define('ExportWaveAsCode', bool, _Wave, char_ptr),         # Export wave sample data to code (.h), returns true on success
+    LoadWave: ray.define('LoadWave', WaveType, char_ptr),
+    LoadWaveFromMemory: ray.define('LoadWaveFromMemory', WaveType, char_ptr, uchar_ptr, int),
+    IsWaveReady: ray.define('IsWaveReady', bool, WaveType),
+    LoadSound: ray.define('LoadSound', SoundType, char_ptr),
+    LoadSoundFromWave: ray.define('LoadSoundFromWave', SoundType, WaveType),
+    IsSoundReady: ray.define('IsSoundReady', bool, SoundType),
+    UpdateSound: ray.define('UpdateSound', void, SoundType, ptr, int),
+    UnloadWave: ray.define('UnloadWave', void, WaveType),
+    UnloadSound: ray.define('UnloadSound', void, SoundType),
+    ExportWave: ray.define('ExportWave', bool, WaveType, char_ptr),
+    ExportWaveAsCode: ray.define('ExportWaveAsCode', bool, WaveType, char_ptr),
 
     # Wave/Sound management functions
-    PlaySound: ray.define('PlaySound', void, _Sound),                                    # Play a sound
-    StopSound: ray.define('StopSound', void, _Sound),                                    # Stop playing a sound
-    PauseSound: ray.define('PauseSound', void, _Sound),                                   # Pause a sound
-    ResumeSound: ray.define('ResumeSound', void, _Sound),                                  # Resume a paused sound
-    IsSoundPlaying: ray.define('IsSoundPlaying', bool, _Sound),                               # Check if a sound is currently playing
-    SetSoundVolume: ray.define('SetSoundVolume', void, _Sound, float),                 # Set volume for a sound (1.0 is max)
-    SetSoundPitch: ray.define('SetSoundPitch', void, _Sound, float),                   # Set pitch for a sound (1.0 is base)
-    SetSoundPan: ray.define('SetSoundPan', void, _Sound, float),                       # Set pan for a sound (0.5 is)
-    WaveCopy: ray.define('WaveCopy', _Wave, _Wave),                                       # Copy a wave to a new wave
-    WaveCrop: ray.define('WaveCrop', void, ptr, int, int),     # Crop a wave to defined samples range
-    WaveFormat: ray.define('WaveFormat', void, ptr, int, int, int), # Convert wave data to desired format
-    LoadWaveSamples: ray.define('LoadWaveSamples', ptr, _Wave),                              # Load samples data from wave as a 32bit float data array
-    UnloadWaveSamples: ray.define('UnloadWaveSamples', void, ptr),                         # Unload samples data loaded LoadWaveSamples: ray.define('LoadWaveSamples', with, )
+    PlaySound: ray.define('PlaySound', void, SoundType),
+    StopSound: ray.define('StopSound', void, SoundType),
+    PauseSound: ray.define('PauseSound', void, SoundType),
+    ResumeSound: ray.define('ResumeSound', void, SoundType),
+    IsSoundPlaying: ray.define('IsSoundPlaying', bool, SoundType),
+    SetSoundVolume: ray.define('SetSoundVolume', void, SoundType, float),
+    SetSoundPitch: ray.define('SetSoundPitch', void, SoundType, float),
+    SetSoundPan: ray.define('SetSoundPan', void, SoundType, float),
+    WaveCopy: ray.define('WaveCopy', WaveType, WaveType),
+    WaveCrop: ray.define('WaveCrop', void, ptr, int, int),
+    WaveFormat: ray.define('WaveFormat', void, ptr, int, int, int),
+    LoadWaveSamples: ray.define('LoadWaveSamples', ptr, WaveType),
+    UnloadWaveSamples: ray.define('UnloadWaveSamples', void, ptr),
 
     # Music management functions
-    LoadMusicStream: ray.define('LoadMusicStream', _Music, char_ptr),                    # Load music stream from file
-    LoadMusicStreamFromMemory: ray.define('LoadMusicStreamFromMemory', _Music, char_ptr, uchar_ptr, int), # Load music stream from data
-    IsMusicReady: ray.define('IsMusicReady', bool, _Music),                                 # Checks if a music stream is ready
-    UnloadMusicStream: ray.define('UnloadMusicStream', void, _Music),                            # Unload music stream
-    PlayMusicStream: ray.define('PlayMusicStream', void, _Music),                              # Start music playing
-    IsMusicStreamPlaying: ray.define('IsMusicStreamPlaying', bool, _Music),                         # Check if music is playing
-    UpdateMusicStream: ray.define('UpdateMusicStream', void, _Music),                            # Updates buffers for music streaming
-    StopMusicStream: ray.define('StopMusicStream', void, _Music),                              # Stop music playing
-    PauseMusicStream: ray.define('PauseMusicStream', void, _Music),                             # Pause music playing
-    ResumeMusicStream: ray.define('ResumeMusicStream', void, _Music),                            # Resume playing paused music
-    SeekMusicStream: ray.define('SeekMusicStream', void, _Music, float),              # Seek music to a position (in)
-    SetMusicVolume: ray.define('SetMusicVolume', void, _Music, float),                 # Set volume for music (1.0 is max)
-    SetMusicPitch: ray.define('SetMusicPitch', void, _Music, float),                   # Set pitch for a music (1.0 is base)
-    SetMusicPan: ray.define('SetMusicPan', void, _Music, float),                       # Set pan for a music (0.5 is)
-    GetMusicTimeLength: ray.define('GetMusicTimeLength', float, _Music),                          # Get music time length (in)
-    GetMusicTimePlayed: ray.define('GetMusicTimePlayed', float, _Music),                          # Get current music time played (in)
+    LoadMusicStream: ray.define('LoadMusicStream', MusicType, char_ptr),
+    LoadMusicStreamFromMemory: ray.define('LoadMusicStreamFromMemory', MusicType, char_ptr, uchar_ptr, int),
+    IsMusicReady: ray.define('IsMusicReady', bool, MusicType),
+    UnloadMusicStream: ray.define('UnloadMusicStream', void, MusicType),
+    PlayMusicStream: ray.define('PlayMusicStream', void, MusicType),
+    IsMusicStreamPlaying: ray.define('IsMusicStreamPlaying', bool, MusicType),
+    UpdateMusicStream: ray.define('UpdateMusicStream', void, MusicType),
+    StopMusicStream: ray.define('StopMusicStream', void, MusicType),
+    PauseMusicStream: ray.define('PauseMusicStream', void, MusicType),
+    ResumeMusicStream: ray.define('ResumeMusicStream', void, MusicType),
+    SeekMusicStream: ray.define('SeekMusicStream', void, MusicType, float),
+    SetMusicVolume: ray.define('SetMusicVolume', void, MusicType, float),
+    SetMusicPitch: ray.define('SetMusicPitch', void, MusicType, float),
+    SetMusicPan: ray.define('SetMusicPan', void, MusicType, float),
+    GetMusicTimeLength: ray.define('GetMusicTimeLength', float, MusicType),
+    GetMusicTimePlayed: ray.define('GetMusicTimePlayed', float, MusicType),
 
     # AudioStream management functions
-    LoadAudioStream: ray.define('LoadAudioStream', _AudioStream, uint, uint, uint), # Load audio stream (to stream raw audio pcm)
-    IsAudioStreamReady: ray.define('IsAudioStreamReady', bool, _AudioStream),                    # Checks if an audio stream is ready
-    UnloadAudioStream: ray.define('UnloadAudioStream', void, _AudioStream),                     # Unload audio stream and free memory
-    UpdateAudioStream: ray.define('UpdateAudioStream', void, _AudioStream, ptr, int), # Update audio stream buffers with data
-    IsAudioStreamProcessed: ray.define('IsAudioStreamProcessed', bool, _AudioStream),                # Check if any audio stream buffers requires refill
-    PlayAudioStream: ray.define('PlayAudioStream', void, _AudioStream),                       # Play audio stream
-    PauseAudioStream: ray.define('PauseAudioStream', void, _AudioStream),                      # Pause audio stream
-    ResumeAudioStream: ray.define('ResumeAudioStream', void, _AudioStream),                     # Resume audio stream
-    IsAudioStreamPlaying: ray.define('IsAudioStreamPlaying', bool, _AudioStream),                  # Check if audio stream is playing
-    StopAudioStream: ray.define('StopAudioStream', void, _AudioStream),                       # Stop audio stream
-    SetAudioStreamVolume: ray.define('SetAudioStreamVolume', void, _AudioStream, float),    # Set volume for audio stream (1.0 is max)
-    SetAudioStreamPitch: ray.define('SetAudioStreamPitch', void, _AudioStream, float),      # Set pitch for audio stream (1.0 is base)
-    SetAudioStreamPan: ray.define('SetAudioStreamPan', void, _AudioStream, float),          # Set pan for audio stream (0.5 is)
-    SetAudioStreamBufferSizeDefault: ray.define('SetAudioStreamBufferSizeDefault', void, int),                 # Default size for new audio streams
+    LoadAudioStream: ray.define('LoadAudioStream', AudioStreamType, uint, uint, uint),
+    IsAudioStreamReady: ray.define('IsAudioStreamReady', bool, AudioStreamType),
+    UnloadAudioStream: ray.define('UnloadAudioStream', void, AudioStreamType),
+    UpdateAudioStream: ray.define('UpdateAudioStream', void, AudioStreamType, ptr, int),
+    IsAudioStreamProcessed: ray.define('IsAudioStreamProcessed', bool, AudioStreamType),
+    PlayAudioStream: ray.define('PlayAudioStream', void, AudioStreamType),
+    PauseAudioStream: ray.define('PauseAudioStream', void, AudioStreamType),
+    ResumeAudioStream: ray.define('ResumeAudioStream', void, AudioStreamType),
+    IsAudioStreamPlaying: ray.define('IsAudioStreamPlaying', bool, AudioStreamType),
+    StopAudioStream: ray.define('StopAudioStream', void, AudioStreamType),
+    SetAudioStreamVolume: ray.define('SetAudioStreamVolume', void, AudioStreamType, float),
+    SetAudioStreamPitch: ray.define('SetAudioStreamPitch', void, AudioStreamType, float),
+    SetAudioStreamPan: ray.define('SetAudioStreamPan', void, AudioStreamType, float),
+    SetAudioStreamBufferSizeDefault: ray.define('SetAudioStreamBufferSizeDefault', void, int),
 
 
     # ----------------------------------------------------------------
@@ -1531,114 +1428,114 @@ def Init(debug) {
       Wrap: ray.define('Wrap', float, float, float, float),
       FloatEquals: ray.define('FloatEquals', int, float, float),
       # Vector2 math
-      Vector2Zero: ray.define('Vector2Zero', _Vector2, void),
-      Vector2One: ray.define('Vector2One', _Vector2, void),
-      Vector2Add: ray.define('Vector2Add', _Vector2, _Vector2, _Vector2),
-      Vector2AddValue: ray.define('Vector2AddValue', _Vector2, _Vector2, float),
-      Vector2Subtract: ray.define('Vector2Subtract', _Vector2, _Vector2, _Vector2),
-      Vector2SubtractValue: ray.define('Vector2SubtractValue', _Vector2, _Vector2, float),
-      Vector2Length: ray.define('Vector2Length', float, _Vector2),
-      Vector2LengthSqr: ray.define('Vector2LengthSqr', float, _Vector2),
-      Vector2DotProduct: ray.define('Vector2DotProduct', float, _Vector2, _Vector2),
-      Vector2Distance: ray.define('Vector2Distance', float, _Vector2, _Vector2),
-      Vector2DistanceSqr: ray.define('Vector2DistanceSqr', float, _Vector2, _Vector2),
-      Vector2Angle: ray.define('Vector2Angle', float, _Vector2, _Vector2),
-      Vector2Scale: ray.define('Vector2Scale', _Vector2, _Vector2, float),
-      Vector2Multiply: ray.define('Vector2Multiply', _Vector2, _Vector2, _Vector2),
-      Vector2Negate: ray.define('Vector2Negate', _Vector2, _Vector2),
-      Vector2Divide: ray.define('Vector2Divide', _Vector2, _Vector2, _Vector2),
-      Vector2Normalize: ray.define('Vector2Normalize', _Vector2, _Vector2),
-      Vector2Transform: ray.define('Vector2Transform', _Vector2, _Vector2, _Matrix),
-      Vector2Lerp: ray.define('Vector2Lerp', _Vector2, _Vector2, _Vector2, float),
-      Vector2Reflect: ray.define('Vector2Reflect', _Vector2, _Vector2, _Vector2),
-      Vector2Rotate: ray.define('Vector2Rotate', _Vector2, _Vector2, float),
-      Vector2MoveTowards: ray.define('Vector2MoveTowards', _Vector2, _Vector2, _Vector2, float),
-      Vector2Invert: ray.define('Vector2Invert', _Vector2, _Vector2),
-      Vector2Clamp: ray.define('Vector2Clamp', _Vector2, _Vector2, _Vector2, _Vector2),
-      Vector2ClampValue: ray.define('Vector2ClampValue', _Vector2, _Vector2, float, float),
-      Vector2Equals: ray.define('Vector2Equals', int, _Vector2, _Vector2),
+      Vector2Zero: ray.define('Vector2Zero', Vector2Type, void),
+      Vector2One: ray.define('Vector2One', Vector2Type, void),
+      Vector2Add: ray.define('Vector2Add', Vector2Type, Vector2Type, Vector2Type),
+      Vector2AddValue: ray.define('Vector2AddValue', Vector2Type, Vector2Type, float),
+      Vector2Subtract: ray.define('Vector2Subtract', Vector2Type, Vector2Type, Vector2Type),
+      Vector2SubtractValue: ray.define('Vector2SubtractValue', Vector2Type, Vector2Type, float),
+      Vector2Length: ray.define('Vector2Length', float, Vector2Type),
+      Vector2LengthSqr: ray.define('Vector2LengthSqr', float, Vector2Type),
+      Vector2DotProduct: ray.define('Vector2DotProduct', float, Vector2Type, Vector2Type),
+      Vector2Distance: ray.define('Vector2Distance', float, Vector2Type, Vector2Type),
+      Vector2DistanceSqr: ray.define('Vector2DistanceSqr', float, Vector2Type, Vector2Type),
+      Vector2Angle: ray.define('Vector2Angle', float, Vector2Type, Vector2Type),
+      Vector2Scale: ray.define('Vector2Scale', Vector2Type, Vector2Type, float),
+      Vector2Multiply: ray.define('Vector2Multiply', Vector2Type, Vector2Type, Vector2Type),
+      Vector2Negate: ray.define('Vector2Negate', Vector2Type, Vector2Type),
+      Vector2Divide: ray.define('Vector2Divide', Vector2Type, Vector2Type, Vector2Type),
+      Vector2Normalize: ray.define('Vector2Normalize', Vector2Type, Vector2Type),
+      Vector2Transform: ray.define('Vector2Transform', Vector2Type, Vector2Type, MatrixType),
+      Vector2Lerp: ray.define('Vector2Lerp', Vector2Type, Vector2Type, Vector2Type, float),
+      Vector2Reflect: ray.define('Vector2Reflect', Vector2Type, Vector2Type, Vector2Type),
+      Vector2Rotate: ray.define('Vector2Rotate', Vector2Type, Vector2Type, float),
+      Vector2MoveTowards: ray.define('Vector2MoveTowards', Vector2Type, Vector2Type, Vector2Type, float),
+      Vector2Invert: ray.define('Vector2Invert', Vector2Type, Vector2Type),
+      Vector2Clamp: ray.define('Vector2Clamp', Vector2Type, Vector2Type, Vector2Type, Vector2Type),
+      Vector2ClampValue: ray.define('Vector2ClampValue', Vector2Type, Vector2Type, float, float),
+      Vector2Equals: ray.define('Vector2Equals', int, Vector2Type, Vector2Type),
       # Vector3 math
-      Vector3Zero: ray.define('Vector3Zero', _Vector3),
-      Vector3One: ray.define('Vector3One', _Vector3),
-      Vector3Add: ray.define('Vector3Add', _Vector3, _Vector3, _Vector3),
-      Vector3AddValue: ray.define('Vector3AddValue', _Vector3, _Vector3, float),
-      Vector3Subtract: ray.define('Vector3Subtract', _Vector3, _Vector3, _Vector3),
-      Vector3SubtractValue: ray.define('Vector3SubtractValue', _Vector3, _Vector3, float),
-      Vector3Scale: ray.define('Vector3Scale', _Vector3, _Vector3, float),
-      Vector3Multiply: ray.define('Vector3Multiply', _Vector3, _Vector3, _Vector3),
-      Vector3CrossProduct: ray.define('Vector3CrossProduct', _Vector3, _Vector3, _Vector3),
-      Vector3Perpendicular: ray.define('Vector3Perpendicular', _Vector3, _Vector3),
-      Vector3Length: ray.define('Vector3Length', float, _Vector3),
-      Vector3LengthSqr: ray.define('Vector3LengthSqr', float, _Vector3),
-      Vector3DotProduct: ray.define('Vector3DotProduct', float, _Vector3, _Vector3),
-      Vector3Distance: ray.define('Vector3Distance', float, _Vector3, _Vector3),
-      Vector3DistanceSqr: ray.define('Vector3DistanceSqr', float, _Vector3, _Vector3),
-      Vector3Angle: ray.define('Vector3Angle', float, _Vector3, _Vector3),
-      Vector3Negate: ray.define('Vector3Negate', _Vector3, _Vector3),
-      Vector3Divide: ray.define('Vector3Divide', _Vector3, _Vector3, _Vector3),
-      Vector3Normalize: ray.define('Vector3Normalize', _Vector3, _Vector3),
-      Vector3OrthoNormalize: ray.define('Vector3OrthoNormalize', void, ptr, ptr), # ptr = Vector3, _Vector3
-      Vector3Transform: ray.define('Vector3Transform', _Vector3, _Vector3, _Matrix),
-      Vector3RotateByQuaternion: ray.define('Vector3RotateByQuaternion', _Vector3, _Vector3, _Quaternion),
-      Vector3RotateByAxisAngle: ray.define('Vector3RotateByAxisAngle', _Vector3, _Vector3, _Vector3, float),
-      Vector3Lerp: ray.define('Vector3Lerp', _Vector3, _Vector3, _Vector3, float),
-      Vector3Reflect: ray.define('Vector3Reflect', _Vector3, _Vector3, _Vector3),
-      Vector3Min: ray.define('Vector3Min', _Vector3, _Vector3, _Vector3),
-      Vector3Max: ray.define('Vector3Max', _Vector3, _Vector3, _Vector3),
-      Vector3Barycenter: ray.define('Vector3Barycenter', _Vector3, _Vector3, _Vector3, _Vector3, _Vector3),
-      Vector3Unproject: ray.define('Vector3Unproject', _Vector3, _Vector3, _Matrix, _Matrix),
-      Vector3ToFloatV: ray.define('Vector3ToFloatV', _float3, _Vector3),
-      Vector3Invert: ray.define('Vector3Invert', _Vector3, _Vector3),
-      Vector3Clamp: ray.define('Vector3Clamp', _Vector3, _Vector3, _Vector3, _Vector3),
-      Vector3ClampValue: ray.define('Vector3ClampValue', _Vector3, _Vector3, float, float),
-      Vector3Equals: ray.define('Vector3Equals', int, _Vector3, _Vector3),
-      Vector3Refract: ray.define('Vector3Refract', _Vector3, _Vector3, _Vector3, float),
+      Vector3Zero: ray.define('Vector3Zero', Vector3Type),
+      Vector3One: ray.define('Vector3One', Vector3Type),
+      Vector3Add: ray.define('Vector3Add', Vector3Type, Vector3Type, Vector3Type),
+      Vector3AddValue: ray.define('Vector3AddValue', Vector3Type, Vector3Type, float),
+      Vector3Subtract: ray.define('Vector3Subtract', Vector3Type, Vector3Type, Vector3Type),
+      Vector3SubtractValue: ray.define('Vector3SubtractValue', Vector3Type, Vector3Type, float),
+      Vector3Scale: ray.define('Vector3Scale', Vector3Type, Vector3Type, float),
+      Vector3Multiply: ray.define('Vector3Multiply', Vector3Type, Vector3Type, Vector3Type),
+      Vector3CrossProduct: ray.define('Vector3CrossProduct', Vector3Type, Vector3Type, Vector3Type),
+      Vector3Perpendicular: ray.define('Vector3Perpendicular', Vector3Type, Vector3Type),
+      Vector3Length: ray.define('Vector3Length', float, Vector3Type),
+      Vector3LengthSqr: ray.define('Vector3LengthSqr', float, Vector3Type),
+      Vector3DotProduct: ray.define('Vector3DotProduct', float, Vector3Type, Vector3Type),
+      Vector3Distance: ray.define('Vector3Distance', float, Vector3Type, Vector3Type),
+      Vector3DistanceSqr: ray.define('Vector3DistanceSqr', float, Vector3Type, Vector3Type),
+      Vector3Angle: ray.define('Vector3Angle', float, Vector3Type, Vector3Type),
+      Vector3Negate: ray.define('Vector3Negate', Vector3Type, Vector3Type),
+      Vector3Divide: ray.define('Vector3Divide', Vector3Type, Vector3Type, Vector3Type),
+      Vector3Normalize: ray.define('Vector3Normalize', Vector3Type, Vector3Type),
+      Vector3OrthoNormalize: ray.define('Vector3OrthoNormalize', void, ptr, ptr),
+      Vector3Transform: ray.define('Vector3Transform', Vector3Type, Vector3Type, MatrixType),
+      Vector3RotateByQuaternion: ray.define('Vector3RotateByQuaternion', Vector3Type, Vector3Type, QuaternionType),
+      Vector3RotateByAxisAngle: ray.define('Vector3RotateByAxisAngle', Vector3Type, Vector3Type, Vector3Type, float),
+      Vector3Lerp: ray.define('Vector3Lerp', Vector3Type, Vector3Type, Vector3Type, float),
+      Vector3Reflect: ray.define('Vector3Reflect', Vector3Type, Vector3Type, Vector3Type),
+      Vector3Min: ray.define('Vector3Min', Vector3Type, Vector3Type, Vector3Type),
+      Vector3Max: ray.define('Vector3Max', Vector3Type, Vector3Type, Vector3Type),
+      Vector3Barycenter: ray.define('Vector3Barycenter', Vector3Type, Vector3Type, Vector3Type, Vector3Type, Vector3Type),
+      Vector3Unproject: ray.define('Vector3Unproject', Vector3Type, Vector3Type, MatrixType, MatrixType),
+      Vector3ToFloatV: ray.define('Vector3ToFloatV', _float3, Vector3Type),
+      Vector3Invert: ray.define('Vector3Invert', Vector3Type, Vector3Type),
+      Vector3Clamp: ray.define('Vector3Clamp', Vector3Type, Vector3Type, Vector3Type, Vector3Type),
+      Vector3ClampValue: ray.define('Vector3ClampValue', Vector3Type, Vector3Type, float, float),
+      Vector3Equals: ray.define('Vector3Equals', int, Vector3Type, Vector3Type),
+      Vector3Refract: ray.define('Vector3Refract', Vector3Type, Vector3Type, Vector3Type, float),
       # Matrix math
-      MatrixDeterminant: ray.define('MatrixDeterminant', float, _Matrix),
-      MatrixTrace: ray.define('MatrixTrace', float, _Matrix),
-      MatrixTranspose: ray.define('MatrixTranspose', _Matrix, _Matrix),
-      MatrixInvert: ray.define('MatrixInvert', _Matrix, _Matrix),
-      MatrixIdentity: ray.define('MatrixIdentity', _Matrix, void),
-      MatrixAdd: ray.define('MatrixAdd', _Matrix, _Matrix, _Matrix),
-      MatrixSubtract: ray.define('MatrixSubtract', _Matrix, _Matrix, _Matrix),
-      MatrixMultiply: ray.define('MatrixMultiply', _Matrix, _Matrix, _Matrix),
-      MatrixTranslate: ray.define('MatrixTranslate', _Matrix, float, float, float),
-      MatrixRotate: ray.define('MatrixRotate', _Matrix, _Vector3, float),
-      MatrixRotateX: ray.define('MatrixRotateX', _Matrix, float),
-      MatrixRotateY: ray.define('MatrixRotateY', _Matrix, float),
-      MatrixRotateZ: ray.define('MatrixRotateZ', _Matrix, float),
-      MatrixRotateXYZ: ray.define('MatrixRotateXYZ', _Matrix, _Vector3),
-      MatrixRotateZYX: ray.define('MatrixRotateZYX', _Matrix, _Vector3),
-      MatrixScale: ray.define('MatrixScale', _Matrix, float, float, float),
-      MatrixFrustum: ray.define('MatrixFrustum', _Matrix, double, double, double, double, double, double),
-      MatrixPerspective: ray.define('MatrixPerspective', _Matrix, double, double, double, double),
-      MatrixOrtho: ray.define('MatrixOrtho', _Matrix, double, double, double, double, double, double),
-      MatrixLookAt: ray.define('MatrixLookAt', _Matrix, _Vector3, _Vector3, _Vector3),
-      MatrixToFloatV: ray.define('MatrixToFloatV', _float16, _Matrix),
+      MatrixDeterminant: ray.define('MatrixDeterminant', float, MatrixType),
+      MatrixTrace: ray.define('MatrixTrace', float, MatrixType),
+      MatrixTranspose: ray.define('MatrixTranspose', MatrixType, MatrixType),
+      MatrixInvert: ray.define('MatrixInvert', MatrixType, MatrixType),
+      MatrixIdentity: ray.define('MatrixIdentity', MatrixType, void),
+      MatrixAdd: ray.define('MatrixAdd', MatrixType, MatrixType, MatrixType),
+      MatrixSubtract: ray.define('MatrixSubtract', MatrixType, MatrixType, MatrixType),
+      MatrixMultiply: ray.define('MatrixMultiply', MatrixType, MatrixType, MatrixType),
+      MatrixTranslate: ray.define('MatrixTranslate', MatrixType, float, float, float),
+      MatrixRotate: ray.define('MatrixRotate', MatrixType, Vector3Type, float),
+      MatrixRotateX: ray.define('MatrixRotateX', MatrixType, float),
+      MatrixRotateY: ray.define('MatrixRotateY', MatrixType, float),
+      MatrixRotateZ: ray.define('MatrixRotateZ', MatrixType, float),
+      MatrixRotateXYZ: ray.define('MatrixRotateXYZ', MatrixType, Vector3Type),
+      MatrixRotateZYX: ray.define('MatrixRotateZYX', MatrixType, Vector3Type),
+      MatrixScale: ray.define('MatrixScale', MatrixType, float, float, float),
+      MatrixFrustum: ray.define('MatrixFrustum', MatrixType, double, double, double, double, double, double),
+      MatrixPerspective: ray.define('MatrixPerspective', MatrixType, double, double, double, double),
+      MatrixOrtho: ray.define('MatrixOrtho', MatrixType, double, double, double, double, double, double),
+      MatrixLookAt: ray.define('MatrixLookAt', MatrixType, Vector3Type, Vector3Type, Vector3Type),
+      MatrixToFloatV: ray.define('MatrixToFloatV', _float16, MatrixType),
       # Quaternion math
-      QuaternionAdd: ray.define('QuaternionAdd', _Quaternion, _Quaternion, _Quaternion),
-      QuaternionAddValue: ray.define('QuaternionAddValue', _Quaternion, _Quaternion, float),
-      QuaternionSubtract: ray.define('QuaternionSubtract', _Quaternion, _Quaternion, _Quaternion),
-      QuaternionSubtractValue: ray.define('QuaternionSubtractValue', _Quaternion, _Quaternion, float),
-      QuaternionIdentity: ray.define('QuaternionIdentity', _Quaternion, void),
-      QuaternionLength: ray.define('QuaternionLength', float, _Quaternion),
-      QuaternionNormalize: ray.define('QuaternionNormalize', _Quaternion, _Quaternion),
-      QuaternionInvert: ray.define('QuaternionInvert', _Quaternion, _Quaternion),
-      QuaternionMultiply: ray.define('QuaternionMultiply', _Quaternion, _Quaternion, _Quaternion),
-      QuaternionScale: ray.define('QuaternionScale', _Quaternion, _Quaternion, float),
-      QuaternionDivide: ray.define('QuaternionDivide', _Quaternion, _Quaternion, _Quaternion),
-      QuaternionLerp: ray.define('QuaternionLerp', _Quaternion, _Quaternion, _Quaternion, float),
-      QuaternionNlerp: ray.define('QuaternionNlerp', _Quaternion, _Quaternion, _Quaternion, float),
-      QuaternionSlerp: ray.define('QuaternionSlerp', _Quaternion, _Quaternion, _Quaternion, float),
-      QuaternionFromVector3ToVector3: ray.define('QuaternionFromVector3ToVector3', _Quaternion, _Vector3, _Vector3),
-      QuaternionFromMatrix: ray.define('QuaternionFromMatrix', _Quaternion, _Matrix),
-      QuaternionToMatrix: ray.define('QuaternionToMatrix', _Matrix, _Quaternion),
-      QuaternionFromAxisAngle: ray.define('QuaternionFromAxisAngle', _Quaternion, _Vector3, float),
-      QuaternionToAxisAngle: ray.define('QuaternionToAxisAngle', void, _Quaternion, ptr, ptr), # ptr = Vector3, float
-      QuaternionFromEuler: ray.define('QuaternionFromEuler', _Quaternion, float, float, float),
-      QuaternionToEuler: ray.define('QuaternionToEuler', _Vector3, _Quaternion),
-      QuaternionTransform: ray.define('QuaternionTransform', _Quaternion, _Quaternion, _Matrix),
-      QuaternionEquals: ray.define('QuaternionEquals', int, _Quaternion, _Quaternion),
+      QuaternionAdd: ray.define('QuaternionAdd', QuaternionType, QuaternionType, QuaternionType),
+      QuaternionAddValue: ray.define('QuaternionAddValue', QuaternionType, QuaternionType, float),
+      QuaternionSubtract: ray.define('QuaternionSubtract', QuaternionType, QuaternionType, QuaternionType),
+      QuaternionSubtractValue: ray.define('QuaternionSubtractValue', QuaternionType, QuaternionType, float),
+      QuaternionIdentity: ray.define('QuaternionIdentity', QuaternionType, void),
+      QuaternionLength: ray.define('QuaternionLength', float, QuaternionType),
+      QuaternionNormalize: ray.define('QuaternionNormalize', QuaternionType, QuaternionType),
+      QuaternionInvert: ray.define('QuaternionInvert', QuaternionType, QuaternionType),
+      QuaternionMultiply: ray.define('QuaternionMultiply', QuaternionType, QuaternionType, QuaternionType),
+      QuaternionScale: ray.define('QuaternionScale', QuaternionType, QuaternionType, float),
+      QuaternionDivide: ray.define('QuaternionDivide', QuaternionType, QuaternionType, QuaternionType),
+      QuaternionLerp: ray.define('QuaternionLerp', QuaternionType, QuaternionType, QuaternionType, float),
+      QuaternionNlerp: ray.define('QuaternionNlerp', QuaternionType, QuaternionType, QuaternionType, float),
+      QuaternionSlerp: ray.define('QuaternionSlerp', QuaternionType, QuaternionType, QuaternionType, float),
+      QuaternionFromVector3ToVector3: ray.define('QuaternionFromVector3ToVector3', QuaternionType, Vector3Type, Vector3Type),
+      QuaternionFromMatrix: ray.define('QuaternionFromMatrix', QuaternionType, MatrixType),
+      QuaternionToMatrix: ray.define('QuaternionToMatrix', MatrixType, QuaternionType),
+      QuaternionFromAxisAngle: ray.define('QuaternionFromAxisAngle', QuaternionType, Vector3Type, float),
+      QuaternionToAxisAngle: ray.define('QuaternionToAxisAngle', void, QuaternionType, ptr, ptr),
+      QuaternionFromEuler: ray.define('QuaternionFromEuler', QuaternionType, float, float, float),
+      QuaternionToEuler: ray.define('QuaternionToEuler', Vector3Type, QuaternionType),
+      QuaternionTransform: ray.define('QuaternionTransform', QuaternionType, QuaternionType, MatrixType),
+      QuaternionEquals: ray.define('QuaternionEquals', int, QuaternionType, QuaternionType),
     }
   }
 

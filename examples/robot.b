@@ -50,7 +50,7 @@ while !ui.WindowShouldClose() {
   if ui.IsKeyPressed(KEY_UP) anim_index = (anim_index + 1) % anims_count
   else if ui.IsKeyPressed(KEY_DOWN) anim_index = (anim_index + anims_count - 1) % anims_count
 
-  var anim = clib.get_ptr_index(model_animation, _ModelAnimation, anim_index)
+  var anim = clib.get_ptr_index(model_animation, ModelAnimationType, anim_index)
   var _anim = DeModelAnimation(anim)
   anim_current_frame = (anim_current_frame + 1) % _anim.frameCount
 

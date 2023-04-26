@@ -321,6 +321,64 @@ var TEXTURE_FILTER_ANISOTROPIC_16X = 5         # Anisotropic filtering 16x
 
 
 /**
+ * Texture parameters: wrap mode
+ */
+var TEXTURE_WRAP_REPEAT = 0            # Repeats texture in tiled mode
+var TEXTURE_WRAP_CLAMP = 1             # Clamps texture to edge pixel in tiled mode
+var TEXTURE_WRAP_MIRROR_REPEAT = 2     # Mirrors and repeats the texture in tiled mode
+var TEXTURE_WRAP_MIRROR_CLAMP = 3      # Mirrors and clamps to border the texture in tiled mode
+
+
+/**
+ * Cubemap layouts
+ */
+var CUBEMAP_LAYOUT_AUTO_DETECT = 0          # Automatically detect layout type
+var CUBEMAP_LAYOUT_LINE_VERTICAL = 1        # Layout is defined by a vertical line with faces
+var CUBEMAP_LAYOUT_LINE_HORIZONTAL = 2      # Layout is defined by a horizontal line with faces
+var CUBEMAP_LAYOUT_CROSS_THREE_BY_FOUR = 3  # Layout is defined by a 3x4 cross with cubemap faces
+var CUBEMAP_LAYOUT_CROSS_FOUR_BY_THREE = 4  # Layout is defined by a 4x3 cross with cubemap faces
+var CUBEMAP_LAYOUT_PANORAMA = 5             # Layout is defined by a panorama image (equirrectangular map)
+
+
+/**
+ * Font type, defines generation method
+ */
+var FONT_DEFAULT = 0               # Default font generation, anti-aliased
+var FONT_BITMAP = 1                # Bitmap font generation, no anti-aliasing
+var FONT_SDF = 2                   # SDF font generation, requires external shader
+
+
+/**
+ * Color blending modes (pre-defined)
+ */
+var BLEND_ALPHA = 0                # Blend textures considering alpha (default)
+var BLEND_ADDITIVE = 1             # Blend textures adding colors
+var BLEND_MULTIPLIED = 2           # Blend textures multiplying colors
+var BLEND_ADD_COLORS = 3           # Blend textures adding colors (alternative)
+var BLEND_SUBTRACT_COLORS = 4      # Blend textures subtracting colors (alternative)
+var BLEND_ALPHA_PREMULTIPLY = 5    # Blend premultiplied textures considering alpha
+var BLEND_CUSTOM = 6               # Blend textures using custom src/dst factors (use rlSetBlendFactors())
+var BLEND_CUSTOM_SEPARATE = 7      # Blend textures using custom rgb/alpha separate src/dst factors (use rlSetBlendFactorsSeparate())
+
+
+/**
+ * Gesture
+ * NOTE: Provided as bit-wise flags to enable only desired gestures
+ */
+var GESTURE_NONE        = 0        # No gesture
+var GESTURE_TAP         = 1        # Tap gesture
+var GESTURE_DOUBLETAP   = 2        # Double tap gesture
+var GESTURE_HOLD        = 4        # Hold gesture
+var GESTURE_DRAG        = 8        # Drag gesture
+var GESTURE_SWIPE_RIGHT = 16       # Swipe right gesture
+var GESTURE_SWIPE_LEFT  = 32       # Swipe left gesture
+var GESTURE_SWIPE_UP    = 64       # Swipe up gesture
+var GESTURE_SWIPE_DOWN  = 128      # Swipe down gesture
+var GESTURE_PINCH_IN    = 256      # Pinch in gesture
+var GESTURE_PINCH_OUT   = 512      # Pinch out gesture
+
+
+/**
  * Camera system modes
  */
 var CAMERA_CUSTOM = 0           # Custom camera
@@ -335,6 +393,14 @@ var CAMERA_THIRD_PERSON = 4     # Third person camera
  */
 var CAMERA_PERSPECTIVE = 0         # Perspective projection
 var CAMERA_ORTHOGRAPHIC = 1        # Orthographic projection
+
+
+/**
+ * N-patch layout
+ */
+var NPATCH_NINE_PATCH = 0          # Npatch layout: 3x3 tiles
+var NPATCH_THREE_PATCH_VERTICAL = 1    # Npatch layout: 1x3 tiles
+var NPATCH_THREE_PATCH_HORIZONTAL = 2  # Npatch layout: 3x1 tiles
 
 
 /**
