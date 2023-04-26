@@ -226,8 +226,8 @@ def DeMaterialMap(v) {
 }
 
 # only used by Material, VrStereoConfig and VrDeviceInfo so far...
-var _float2 = struct(float, float)
-var _float4 = struct(float, float, float, float)
+var float2Type = struct(float, float)
+var float4Type = struct(float, float, float, float)
 var Matrix2Type = struct(MatrixType, MatrixType)
 def DeMatrix2(v) {
   var res = get(Matrix2Type, v)
@@ -239,31 +239,31 @@ def DeMatrix2(v) {
 var MaterialType = named_struct({
   shader: ShaderType,
   maps:   ptr,
-  params: _float4,
+  params: float4Type,
 })
 def DeMaterial(v) {
   var res = get(MaterialType, v)
   res.shader = get(ShaderType, res.shader)
-  res.params = get(_float4, res.params)
+  res.params = get(float4Type, res.params)
   return res
 }
 
-var _float3 = struct(
+var float3Type = struct(
   float,
   float,
   float
 )
 def Defloat3(v) {
-  return get(_float3, v)
+  return get(float3Type, v)
 }
 
-var _float16 = struct(
+var float16Type = struct(
   float, float, float, float,
   float, float, float, float,
   float, float, float, float
 )
 def Defloat16(v) {
-  return get(_float16, v)
+  return get(float16Type, v)
 }
 
 var TransformType = named_struct({
@@ -411,36 +411,36 @@ var VrDeviceInfoType = named_struct({
   eyeToScreenDistance:    float,      
   lensSeparationDistance: float,   
   interpupillaryDistance: float,   
-  lensDistortionValues:   _float4,  
-  chromaAbCorrection:     _float4,    
+  lensDistortionValues:   float4Type,  
+  chromaAbCorrection:     float4Type,    
 })
 def DeVrDeviceInfo(v) {
   var res = get(VrDeviceInfoType, v)
-  res.lensDistortionValues = get(_float4, res.lensDistortionValues)
-  res.chromaAbCorrection = get(_float4, res.chromaAbCorrection)
+  res.lensDistortionValues = get(float4Type, res.lensDistortionValues)
+  res.chromaAbCorrection = get(float4Type, res.chromaAbCorrection)
   return res
 }
 
 var VrStereoConfigType = named_struct({
   projection:         Matrix2Type,           
   viewOffset:         Matrix2Type,           
-  leftLensCenter:     _float2,        
-  rightLensCenter:    _float2,       
-  leftScreenCenter:   _float2,      
-  rightScreenCenter:  _float2,     
-  scale:              _float2,                 
-  scaleIn:            _float2,               
+  leftLensCenter:     float2Type,        
+  rightLensCenter:    float2Type,       
+  leftScreenCenter:   float2Type,      
+  rightScreenCenter:  float2Type,     
+  scale:              float2Type,                 
+  scaleIn:            float2Type,               
 })
 def DeVrStereoConfig(v) {
   var res = get(VrStereoConfigType, v)
   res.projection = get(Matrix2Type, res.projection)
   res.viewOffset = get(Matrix2Type, res.viewOffset)
-  res.leftLensCenter = get(_float2, res.leftLensCenter)
-  res.rightLensCenter = get(_float2, res.rightLensCenter)
-  res.leftScreenCenter = get(_float2, res.leftScreenCenter)
-  res.rightScreenCenter = get(_float2, res.rightScreenCenter)
-  res.scale = get(_float2, res.scale)
-  res.scaleIn = get(_float2, res.scaleIn)
+  res.leftLensCenter = get(float2Type, res.leftLensCenter)
+  res.rightLensCenter = get(float2Type, res.rightLensCenter)
+  res.leftScreenCenter = get(float2Type, res.leftScreenCenter)
+  res.rightScreenCenter = get(float2Type, res.rightScreenCenter)
+  res.scale = get(float2Type, res.scale)
+  res.scaleIn = get(float2Type, res.scaleIn)
   return res
 }
 
@@ -602,12 +602,28 @@ def Material(shader, maps, params) {
   return new(MaterialType, shader, reflect.get_address(maps), params)
 }
 
+def float2(floats) {
+  if !is_list(floats) floats = to_list(floats)
+  if floats.length() < 2 {
+    floats.extend([0] * (2 - floats.length()))
+  }
+  return new(float2Type, floats)
+}
+
 def float3(floats) {
   if !is_list(floats) floats = to_list(floats)
   if floats.length() < 3 {
     floats.extend([0] * (3 - floats.length()))
   }
-  return new(_float3, floats)
+  return new(float3Type, floats)
+}
+
+def float4(floats) {
+  if !is_list(floats) floats = to_list(floats)
+  if floats.length() < 4 {
+    floats.extend([0] * (4 - floats.length()))
+  }
+  return new(float4Type, floats)
 }
 
 def float16(floats) {
@@ -615,7 +631,7 @@ def float16(floats) {
   if floats.length() < 16 {
     floats.extend([0] * (16 - floats.length()))
   }
-  return new(_float16, floats)
+  return new(float16Type, floats)
 }
 
 def BoneInfo(name, paren) {
@@ -906,8 +922,12 @@ def Init(debug) {
     EndBlendMode: ray.define('EndBlendMode', void),
     BeginScissorMode: ray.define('BeginScissorMode', void, int, int, int, int),
     EndScissorMode: ray.define('EndScissorMode', void),
-    # var BeginVrStereoMode = ray.define('BeginVrStereoMode', void)
-    # var EndVrStereoMode = ray.define('EndVrStereoMode', void)
+    BeginVrStereoMode: ray.define('BeginVrStereoMode', void, VrStereoConfigType),
+    EndVrStereoMode: ray.define('EndVrStereoMode', void),
+
+    # VR stereo config functions for VR simulator
+    LoadVrStereoConfig: ray.define('LoadVrStereoConfig', VrStereoConfigType, VrDeviceInfoType),
+    UnloadVrStereoConfig: ray.define('UnloadVrStereoConfig', void, VrStereoConfigType),
 
     # Shader management functions
     LoadShader: ray.define('LoadShader', ShaderType, char_ptr, char_ptr),
@@ -923,6 +943,8 @@ def Init(debug) {
 
     # Screen-space-related functions
     GetMouseRay: ray.define('GetMouseRay', RayType, Vector2Type, Camera3DType),
+    GetCameraMatrix: ray.define('GetCameraMatrix', MatrixType, CameraType),
+    GetCameraMatrix2D: ray.define('GetCameraMatrix2D', MatrixType, Camera2DType),
     GetWorldToScreen: ray.define('GetWorldToScreen', Vector2Type, Vector3Type, Camera3DType),
     GetScreenToWorld2D: ray.define('GetScreenToWorld2D', Vector2Type, Vector2Type, Camera2DType),
     GetWorldToScreenEx: ray.define('GetWorldToScreenEx', Vector2Type, Vector3Type, Camera3DType, int, int),
@@ -944,6 +966,11 @@ def Init(debug) {
     MemRealloc: ray.define('MemRealloc', ptr, ptr, uint),
     MemFree: ray.define('MemFree', void, ptr),
     OpenURL: ray.define('OpenURL', void, char_ptr),
+
+    # Files management functions
+    IsFileDropped: ray.define('IsFileDropped', bool),
+    LoadDroppedFiles: ray.define('LoadDroppedFiles', FilePathListType),
+    UnloadDroppedFiles: ray.define('UnloadDroppedFiles', void, FilePathListType),
 
 
     # ------------------------------------------------------------------------------------
@@ -1484,7 +1511,7 @@ def Init(debug) {
       Vector3Max: ray.define('Vector3Max', Vector3Type, Vector3Type, Vector3Type),
       Vector3Barycenter: ray.define('Vector3Barycenter', Vector3Type, Vector3Type, Vector3Type, Vector3Type, Vector3Type),
       Vector3Unproject: ray.define('Vector3Unproject', Vector3Type, Vector3Type, MatrixType, MatrixType),
-      Vector3ToFloatV: ray.define('Vector3ToFloatV', _float3, Vector3Type),
+      Vector3ToFloatV: ray.define('Vector3ToFloatV', float3Type, Vector3Type),
       Vector3Invert: ray.define('Vector3Invert', Vector3Type, Vector3Type),
       Vector3Clamp: ray.define('Vector3Clamp', Vector3Type, Vector3Type, Vector3Type, Vector3Type),
       Vector3ClampValue: ray.define('Vector3ClampValue', Vector3Type, Vector3Type, float, float),
@@ -1511,7 +1538,7 @@ def Init(debug) {
       MatrixPerspective: ray.define('MatrixPerspective', MatrixType, double, double, double, double),
       MatrixOrtho: ray.define('MatrixOrtho', MatrixType, double, double, double, double, double, double),
       MatrixLookAt: ray.define('MatrixLookAt', MatrixType, Vector3Type, Vector3Type, Vector3Type),
-      MatrixToFloatV: ray.define('MatrixToFloatV', _float16, MatrixType),
+      MatrixToFloatV: ray.define('MatrixToFloatV', float16Type, MatrixType),
       # Quaternion math
       QuaternionAdd: ray.define('QuaternionAdd', QuaternionType, QuaternionType, QuaternionType),
       QuaternionAddValue: ray.define('QuaternionAddValue', QuaternionType, QuaternionType, float),
@@ -1536,7 +1563,29 @@ def Init(debug) {
       QuaternionToEuler: ray.define('QuaternionToEuler', Vector3Type, QuaternionType),
       QuaternionTransform: ray.define('QuaternionTransform', QuaternionType, QuaternionType, MatrixType),
       QuaternionEquals: ray.define('QuaternionEquals', int, QuaternionType, QuaternionType),
-    }
+    },
+
+    # ----------------------------------------------------------------
+    # Camera functions (rcamera.h)
+    # ----------------------------------------------------------------
+    camera: {
+      GetCameraForward: ray.define('GetCameraForward', Vector3Type, ptr),
+      GetCameraUp: ray.define('GetCameraUp', Vector3Type, ptr),
+      GetCameraRight: ray.define('GetCameraRight', Vector3Type, ptr),
+
+      # Camera movement
+      CameraMoveForward: ray.define('CameraMoveForward', void, ptr, float, bool),
+      CameraMoveUp: ray.define('CameraMoveUp', void, ptr, float),
+      CameraMoveRight: ray.define('CameraMoveRight', void, ptr, float, bool),
+      CameraMoveToTarget: ray.define('CameraMoveToTarget', void, ptr, float),
+
+      # Camera rotation
+      CameraYaw: ray.define('CameraYaw', void, ptr, float, bool),
+      CameraPitch: ray.define('CameraPitch', void, ptr, float, bool, bool, bool),
+      CameraRoll: ray.define('CameraRoll', void, ptr, float),
+      GetCameraViewMatrix: ray.define('GetCameraViewMatrix', MatrixType, ptr),
+      GetCameraProjectionMatrix: ray.define('GetCameraProjectionMatrix', MatrixType, ptr, float),
+    },
   }
 
   return lib

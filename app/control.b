@@ -11,8 +11,8 @@ class Control {
   # states
   var mouse_is_hover = false
   var was_activated = false
-  var was_clicked = false
-  var was_right_clicked = false
+  var has_mouse_down = false
+  var was_context_clicked = false
   var _is_form_active = false
 
   # relation
@@ -43,10 +43,47 @@ class Control {
     self.context_listener = options.get('on_context', @(sender, data){})
     self.mouse_over_listener = options.get('on_mouse_over', @(sender, data){})
     self.mouse_down_listener = options.get('on_mouse_down', @(sender, data){})
-    self.blur_listener = options.get('on_blur', @(sender, data){})
+    self.mouse_up_listener = options.get('on_mouse_up', @(sender, data){})
+    self.blur_listener = options.get('on_blur', @(){})
 
     # auto sets
     self.update_bounds()
+  }
+
+  clicked(ui, data) {
+    if self.click_listener {
+      self.click_listener(self, data)
+    }
+  }
+
+  context_clicked(ui, data) {
+    if self.context_listener {
+      self.context_listener(self, data)
+    }
+  }
+
+  mouse_hovered(ui, data) {
+    if !self.mouse_is_hover and self.mouse_over_listener {
+      self.mouse_over_listener(self, data)
+    }
+  }
+
+  mouse_down(ui, data) {
+    if self.mouse_down_listener {
+      self.mouse_over_listener(self, data)
+    }
+  }
+
+  mouse_up(ui, data) {
+    if self.mouse_up_listener {
+      self.mouse_up_listener(self, data)
+    }
+  }
+
+  blured(ui) {
+    if self.blur_listener and self.was_activated {
+      self.blur_listener()
+    }
   }
 
   can_have_child() {
@@ -141,26 +178,26 @@ class Control {
         self.mouse_over_listener(self, mousepos_coords)
       self.mouse_is_hover = true
       if ui.IsMouseButtonDown(ray.MOUSE_BUTTON_LEFT) {
-        if !self.was_clicked and self.click_listener 
+        if !self.has_mouse_down and self.click_listener 
           self.click_listener(self, mousepos_coords)
-        self.was_clicked = true
+        self.has_mouse_down = true
         self.was_activated = true
-        self.was_right_clicked = false
+        self.was_context_clicked = false
       } else if(ui.IsMouseButtonDown(ray.MOUSE_BUTTON_RIGHT)) {
-        if !self.was_right_clicked and self.context_listener 
+        if !self.was_context_clicked and self.context_listener 
           self.context_listener(self, mousepos_coords)
-        self.was_right_clicked = true
+        self.was_context_clicked = true
       } else if(ui.IsMouseButtonUp(ray.MOUSE_BUTTON_LEFT)) {
-        self.was_clicked = false
+        self.has_mouse_down = false
       } else if(ui.IsMouseButtonUp(ray.MOUSE_BUTTON_RIGHT)) {
-        self.was_clicked = false
-        self.was_right_clicked = false
+        self.has_mouse_down = false
+        self.was_context_clicked = false
       } else {
-        self.was_right_clicked = false
+        self.was_context_clicked = false
       }
     } else {
       self.mouse_is_hover = false
-      self.was_right_clicked = false
+      self.was_context_clicked = false
       if ui.IsMouseButtonDown(ray.MOUSE_BUTTON_LEFT) or ui.IsMouseButtonDown(ray.MOUSE_BUTTON_RIGHT) {
         if self.blur_listener self.blur_listener()
         self.was_activated = false

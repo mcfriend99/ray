@@ -24,40 +24,36 @@ class Form < Control {
     self.title = options.get('title', self.text)
   }
 
-  _handle_mouse_events(ui, el, mousepos) {
+  _handle_mouse_events(ui, el, mousepos, mousepos_coords) {
     if el.id > self._active_id {
       ui.SetMouseCursor(el.cursor)
       self._active_id = el.id
     }
-
-    var mousepos_coords = ray.DeVector2(mousepos)
+    
     mousepos_coords.x -= el.rect.x
     mousepos_coords.y -= el.rect.y
-
-    if !el.mouse_is_hover and el.mouse_over_listener {
-      self.mouse_over_listener(el, mousepos_coords)
-    }
     
     el.mouse_is_hover = true
-    if ui.IsMouseButtonDown(ray.MOUSE_BUTTON_LEFT) {
-      if !el.was_clicked and el.click_listener {
-        el.click_listener(el, mousepos_coords)
-      }
-      el.was_clicked = true
+    if ui.IsMouseButtonReleased(ray.MOUSE_BUTTON_LEFT) {
+      el.clicked(self.ui, mousepos_coords)
+      el.has_mouse_down = false
       el.was_activated = true
-      el.was_right_clicked = false
-    } else if(ui.IsMouseButtonDown(ray.MOUSE_BUTTON_RIGHT)) {
-      if !el.was_right_clicked and el.context_listener {
-        el.context_listener(el, mousepos_coords)
-      }
-      el.was_right_clicked = true
+      el.was_context_clicked = false
+    } else if(ui.IsMouseButtonReleased(ray.MOUSE_BUTTON_RIGHT)) {
+      el.context_clicked(self.ui, mousepos_coords)
+      el.has_mouse_down = false
+      el.was_context_clicked = true
+    } else if(ui.IsMouseButtonDown(ray.MOUSE_BUTTON_LEFT)) {
+      el.mouse_down(self.ui, mousepos_coords)
+      el.has_mouse_down = true
+      el.was_activated = true
     } else if(ui.IsMouseButtonUp(ray.MOUSE_BUTTON_LEFT)) {
-      el.was_clicked = false
-    } else if(ui.IsMouseButtonUp(ray.MOUSE_BUTTON_RIGHT)) {
-      el.was_clicked = false
-      el.was_right_clicked = false
+      el.mouse_up(self.ui, mousepos_coords)
+      el.has_mouse_down = false
     } else {
-      el.was_right_clicked = false
+      el.has_mouse_down = false
+      el.was_context_clicked = false
+      el.was_activated = false
     }
   }
 
@@ -157,6 +153,7 @@ class Form < Control {
       {
         self.ui.ClearBackground(self.color)
         var mousepos = self.ui.GetMousePosition()
+        var mousepos_coords = ray.DeVector2(mousepos)
         self._Paint(self.ui, self, mousepos)
 
         var form_active_found = false
@@ -173,27 +170,24 @@ class Form < Control {
             }
 
             form_active_found = true
-            self._handle_mouse_events(self.ui, child, mousepos)
+            self._handle_mouse_events(self.ui, child, mousepos, mousepos_coords)
             self.ui.SetMouseCursor(child.cursor)
           } else {
             child.mouse_is_hover = false
-            child.was_right_clicked = false
-            if self.ui.IsMouseButtonDown(ray.MOUSE_BUTTON_LEFT) or self.ui.IsMouseButtonDown(ray.MOUSE_BUTTON_RIGHT) {
-              if child.blur_listener and child.was_activated {
-                child.blur_listener()
-              }
+            child.was_context_clicked = false
+            if self.ui.IsMouseButtonReleased(ray.MOUSE_BUTTON_LEFT) or self.ui.IsMouseButtonReleased(ray.MOUSE_BUTTON_RIGHT) {
+              child.blured(self.ui)
               child.was_activated = false
+              child.has_mouse_down = false
+              child.was_context_clicked = false
             }
           }
         }
 
         if !form_active_found {
           self.ui.SetMouseCursor(self._default_cursor)
-          if(self.ui.IsMouseButtonDown(ray.MOUSE_BUTTON_RIGHT)) {
-            var mousepos_coords = ray.DeVector2(mousepos)
-            if self.context_listener {
-              self.context_listener(self, mousepos_coords)
-            }
+          if(self.ui.IsMouseButtonReleased(ray.MOUSE_BUTTON_RIGHT)) {
+            self.context_clicked(self.ui, mousepos_coords)
           }
         }
       }
