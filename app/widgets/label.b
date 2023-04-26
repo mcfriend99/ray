@@ -10,6 +10,7 @@ class Label < Control {
 
     self.font_size = options.get('font_size', self._default_font_size)
     self.color = options.get('color', self._default_font_color)
+    self.background_color = options.get('background_color', ray.TRANSPARENT)
   }
 
   Paint(ui) {
@@ -25,6 +26,7 @@ class Label < Control {
       self.update_bounds()
     }
 
+    ui.DrawRectangleRec(self.bounds, self.background_color)
     ui.DrawTextEx(
       self.font, 
       text, 

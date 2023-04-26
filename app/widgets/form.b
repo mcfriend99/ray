@@ -164,7 +164,8 @@ class Form < Control {
         iter var i = self._child_list.length() - 1; i >= 0; i-- {
           var child = self._child_list[i]
 
-          if !form_active_found and self.ui.CheckCollisionPointRec(mousepos, child.bounds) {
+          if !form_active_found and self.ui.CheckCollisionPointRec(mousepos, child.bounds) and
+            self.ui.CheckCollisionPointRec(mousepos, child.ancestor.bounds) {
             if self._locked_to {
               if child != self._locked_to and !child.is_child_of(self._locked_to) {
                 continue

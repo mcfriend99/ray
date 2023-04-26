@@ -93,17 +93,17 @@ var f = Form(ui, {
       height: 50,
       src: 'icon.png',
     }),
-    Message({
-      text: @(){ return 'You say: ' + name.text },
-      visible: @(){ return show_message },
-      on_close: @(){ show_message = false }
-    }),
     Checkbox({
       x: 265,
       y: 370,
       text: 'Remember me',
       font_color: MAROON,
       check_color: MAROON,
+    }),
+    Message({
+      text: @(){ return 'You said: ' + name.text },
+      visible: @(){ return show_message },
+      on_close: @(){ show_message = false },
     }),
   ]
 })
