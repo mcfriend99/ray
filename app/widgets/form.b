@@ -11,6 +11,7 @@ class Form < Control {
   var _active_id = -1
   var _child_list = []
   var _locked_to = nil
+  var _close_window = false
 
   Form(ui, options) {
     parent(options)
@@ -21,7 +22,11 @@ class Form < Control {
 
     self.font = options.get('font', _default_font_file)
     self.resizable = options.get('resizable', true)
+    self.show_controls = options.get('show_controls', true)
     self.title = options.get('title', self.text)
+
+    self.Paint()
+    self.Dispose()
   }
 
   _handle_mouse_events(ui, el, mousepos, mousepos_coords) {
@@ -124,6 +129,9 @@ class Form < Control {
     if self.resizable {
       flags |= ray.FLAG_WINDOW_RESIZABLE
     }
+    if !self.show_controls {
+      flags |= ray.FLAG_WINDOW_UNDECORATED
+    }
 
     self.ui.SetConfigFlags(flags)
     self.ui.InitWindow(self.width, self.height, self.title)
@@ -141,7 +149,11 @@ class Form < Control {
     self.x = 0
     self.y = 0
 
-    while !self.ui.WindowShouldClose() {
+    while !self._close_window {
+      if self.ui.WindowShouldClose() {
+        self._close_window = true
+      }
+
       self._el_id = -1
       self._child_list.clear()
 
@@ -193,6 +205,10 @@ class Form < Control {
       }
       self.ui.EndDrawing()
     }
+  }
+
+  close() {
+    self._close_window = true
   }
 
   Dispose() {

@@ -20,9 +20,9 @@ class Label < Control {
 
     # if width is zero and auto_size is true, automatically set width.
     if self.width == 0 and self.auto_size {
-      self.width = ray.DeVector2(
-        ui.MeasureTextEx(self.font, text, self.font_size, 0)).x + 
-        (self.padding * 2)
+      var text_size = ray.DeVector2(ui.MeasureTextEx(self.font, text, self.font_size, 0))
+      self.width = text_size.x + (self.padding * 2)
+      self.height = text_size.y
       self.update_bounds()
     }
 

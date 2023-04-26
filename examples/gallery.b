@@ -107,7 +107,5 @@ var f = Form(ui, {
     }),
   ]
 })
-f.Paint()
-f.Dispose()
 
 # ui.OpenURL('https://wazobia.com')

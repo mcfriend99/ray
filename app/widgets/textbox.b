@@ -28,10 +28,15 @@ class Textbox <  Control {
     self.active_border_color = options.get('active_border_color', ray.BLUE)
     self.caret_color = options.get('caret_color', ray.DARKGRAY)
     self.max_length = options.get('max_length', -1)
+    self.obscure_char = options.get('obscure_char', nil)
     if options.contains('font') {
       self.font = options.font
     }
-    self.on_change = options.get('on_change', @(s, t){})
+    self.on_change = options.get('on_change', @(s,t){})
+
+    if self.obscure_char and (!is_string(self.obscure_char) or self.obscure_char.length() > 1) {
+      die Exception('invalid obscure character in ${typeof(self)}')
+    }
 
     # update textbox bounds since default bound may have width set to zero.
     self.update_bounds()
@@ -90,6 +95,8 @@ class Textbox <  Control {
       }
     }
 
+    self.text = self.text.ascii()
+
     ui.DrawRectangleRec(self.bounds, self.color)
     var line_color = self.mouse_is_hover and !self.was_activated ? 
       self.hover_border_color : 
@@ -118,6 +125,11 @@ class Textbox <  Control {
           chars_shown = chars_shown[,-1]
       }
     }
+
+    if self.obscure_char {
+      chars_shown = self.obscure_char * chars_shown.length()
+    }
+
     ui.DrawTextEx(
       self.font, 
       chars_shown, 

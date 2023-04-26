@@ -3,7 +3,7 @@ import ..control { Control }
 
 class Checkbox < Control {
   var _show_children = false
-  var checked = true
+  var checked = false
 
   Checkbox(options) {
     parent(options)

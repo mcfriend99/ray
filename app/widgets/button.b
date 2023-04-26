@@ -23,18 +23,17 @@ class Button < Control {
     parent.Paint(ui)
 
     var text = self.get_text()
+    var text_size = ray.DeVector2(ui.MeasureTextEx(self.font, text, self.font_size, 0))
 
     # if height is zero and auto_size is true, automatically set height.
     if self.height == 0 and self.auto_size {
-      self.height = ray.DeVector2(
-        ui.MeasureTextEx(self.font, text, self.font_size, 0)).y +  (self.y_padding * 2)
+      self.height = text_size.y +  (self.y_padding * 2)
       self.update_bounds()
     }
 
     # if width is zero and auto_size is true, automatically set width.
     if self.width == 0 and self.auto_size {
-      self.width = ray.DeVector2(
-        ui.MeasureTextEx(self.font, text, self.font_size, 0)).x + (self.x_padding * 2)
+      self.width = text_size.x + (self.x_padding * 2)
       self.update_bounds()
     }
 
@@ -46,7 +45,7 @@ class Button < Control {
       self.font, 
       text, 
       ray.Vector2(
-        self.rect.x + self.x_padding, 
+        self.rect.x + ((self.rect.width - (text_size.x + (self.x_padding / 2))) / 2), 
         self.rect.y + self.y_padding
       ), 
       self.font_size, 
