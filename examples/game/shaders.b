@@ -6,7 +6,7 @@ var GLSL_VERSION = 330
 var SCREEN_WIDTH = 800
 var SCREEN_HEIGHT = 650
 
-var resource_dir = os.join_paths(os.dir_name(os.current_file()), 'resources', 'shaders', 'glsl${GLSL_VERSION}')
+var resource_dir = os.join_paths(os.dir_name(__file__), 'resources', 'shaders', 'glsl${GLSL_VERSION}')
 
 var ui = Init()
 
@@ -14,7 +14,7 @@ ui.SetConfigFlags(FLAG_MSAA_4X_HINT)
 ui.InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, '3D Example')
 
 # Create fine tuned font...
-var font = ui.LoadFont(os.join_paths(os.dir_name(os.dir_name(os.dir_name(os.current_file()))), 'fonts', 'Segoe UI.ttf'))
+var font = ui.LoadFont(os.join_paths(os.dir_name(os.dir_name(os.dir_name(__file__))), 'fonts', 'Segoe UI.ttf'))
 var t1 = DeFont(font).texture
 var texture = Texture2D(t1.id, t1.width, t1.height, t1.mipmaps, t1.format)
 ui.SetTextureFilter(texture, TEXTURE_FILTER_TRILINEAR)
@@ -29,8 +29,8 @@ var camera = Camera(
 )
 
 var position = Vector3(0, 0, 0)
-var model = ui.LoadModel(os.join_paths(os.dir_name(os.current_file()), 'resources', 'models', 'church.obj'))
-var texture = ui.LoadTexture(os.join_paths(os.dir_name(os.current_file()), 'resources', 'models', 'church_diffuse.png'))
+var model = ui.LoadModel(os.join_paths(os.dir_name(__file__), 'resources', 'models', 'church.obj'))
+var texture = ui.LoadTexture(os.join_paths(os.dir_name(__file__), 'resources', 'models', 'church_diffuse.png'))
 ui.SetMaterialTexture(
   DeModel(model).materials, 
   MATERIAL_MAP_DIFFUSE, 

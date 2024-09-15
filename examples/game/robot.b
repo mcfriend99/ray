@@ -1,21 +1,21 @@
 import ..app { * }
 import reflect
 import os
-import clib
+import clib { get_ptr_index }
 import struct
 
 var GLSL_VERSION = 330
 var SCREEN_WIDTH = 800
 var SCREEN_HEIGHT = 450
 
-var animation_file = os.join_paths(os.dir_name(os.current_file()), 'resources', 'models', 'gltf', 'robot.glb')
+var animation_file = os.join_paths(os.dir_name(__file__), 'resources', 'models', 'gltf', 'robot.glb')
 
 var ui = Init()
 
 ui.InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, 'Animation Example')
 
 # Create fine tuned font...
-var font = ui.LoadFont(os.join_paths(os.dir_name(os.dir_name(os.dir_name(os.current_file()))), 'fonts', 'Segoe UI.ttf'))
+var font = ui.LoadFont(os.join_paths(os.dir_name(os.dir_name(os.dir_name(__file__))), 'fonts', 'Segoe UI.ttf'))
 var t1 = DeFont(font).texture
 var texture = Texture2D(t1.id, t1.width, t1.height, t1.mipmaps, t1.format)
 ui.SetTextureFilter(texture, TEXTURE_FILTER_TRILINEAR)
@@ -50,7 +50,7 @@ while !ui.WindowShouldClose() {
   if ui.IsKeyPressed(KEY_UP) anim_index = (anim_index + 1) % anims_count
   else if ui.IsKeyPressed(KEY_DOWN) anim_index = (anim_index + anims_count - 1) % anims_count
 
-  var anim = clib.get_ptr_index(model_animation, ModelAnimationType, anim_index)
+  var anim = get_ptr_index(model_animation, ModelAnimationType, anim_index)
   var _anim = DeModelAnimation(anim)
   anim_current_frame = (anim_current_frame + 1) % _anim.frameCount
 

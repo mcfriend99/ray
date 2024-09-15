@@ -12,7 +12,7 @@ ui.SetConfigFlags(FLAG_MSAA_4X_HINT)
 ui.InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, 'Plane Example')
 
 # Create fine tuned font...
-var font = ui.LoadFont(os.join_paths(os.dir_name(os.dir_name(os.dir_name(os.current_file()))), 'fonts', 'abeezee.ttf'))
+var font = ui.LoadFont(os.join_paths(os.dir_name(os.dir_name(os.dir_name(__file__))), 'fonts', 'abeezee.ttf'))
 var t1 = DeFont(font).texture
 var texture = Texture2D(t1.id, t1.width, t1.height, t1.mipmaps, t1.format)
 ui.SetTextureFilter(texture, TEXTURE_FILTER_TRILINEAR)
@@ -26,8 +26,8 @@ var camera = Camera(
   CAMERA_PERSPECTIVE # projection
 )
 
-var model = ui.LoadModel(os.join_paths(os.dir_name(os.current_file()), 'resources', 'models', 'obj', 'plane.obj'))
-var texture = ui.LoadTexture(os.join_paths(os.dir_name(os.current_file()), 'resources', 'models', 'obj', 'plane_diffuse.png'))
+var model = ui.LoadModel(os.join_paths(os.dir_name(__file__), 'resources', 'models', 'obj', 'plane.obj'))
+var texture = ui.LoadTexture(os.join_paths(os.dir_name(__file__), 'resources', 'models', 'obj', 'plane_diffuse.png'))
 ui.SetMaterialTexture(
   DeModel(model).materials, 
   MATERIAL_MAP_DIFFUSE, 

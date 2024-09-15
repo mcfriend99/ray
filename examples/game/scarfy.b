@@ -1,13 +1,12 @@
 import ..app { * }
 import reflect
 import os
-import iters
 
 var GLSL_VERSION = 330
 var SCREEN_WIDTH = 1280
 var SCREEN_HEIGHT = 615
 
-var resource_dir = os.join_paths(os.dir_name(os.current_file()), 'resources')
+var resource_dir = os.join_paths(os.dir_name(__file__), 'resources')
 
 var ui = Init()
 
@@ -118,7 +117,7 @@ class CoinBucket {
       return
     }
     
-    iters.each(self._coins, @(x, i) {
+    self._coins.each(@(x, i) {
       if self.ui.CheckCollisionRecs(
         Rectangle(x_pos, y_pos, scarfy_width, _scarfy.height), 
         Rectangle(x.x, x.y, coin_width, _coin.height)
@@ -133,7 +132,7 @@ class CoinBucket {
   }
 
   draw() {
-    iters.each(self._coins, @(x) {
+    self._coins.each(@(x) {
       x.draw(self.ui)
     })
   }

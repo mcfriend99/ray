@@ -3,7 +3,7 @@ import os
 import ..ray
 import ..control { Control }
 
-var _default_font_file = os.join_paths(os.dir_name(os.current_file()), '../../fonts/Segoe UI.ttf')
+var _default_font_file = os.join_paths(os.dir_name(__file__), '../../fonts/Segoe UI.ttf')
 
 class Form < Control {
   var is_running = false

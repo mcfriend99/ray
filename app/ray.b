@@ -3,9 +3,8 @@ import struct as st
 import .constants { * }
 import reflect
 import os
-import iters
 
-var _bin_path = os.join_paths(os.dir_name(os.dir_name(os.current_file())), 'bin', 'libraylib')
+var _bin_path = os.join_paths(os.dir_name(os.dir_name(__file__)), 'bin', 'libraylib')
 var _machine_type = os.platform == 'windows' ? 'x86_64' : os.info().machine
 var _ptr_type = 'Q'
 
@@ -821,7 +820,7 @@ def Init(debug) {
 
       # windows require that we are have our directory in the path
       var curr_env = os.get_env('PATH')
-      curr_env += os.join_paths(os.dir_name(os.dir_name(os.current_file())), 'bin') + ';'
+      curr_env += os.join_paths(os.dir_name(os.dir_name(__file__)), 'bin') + ';'
       os.set_env('PATH', curr_env)
       _bin_path = 'libraylib.dll'
     }
