@@ -82,7 +82,7 @@ class Form < Control {
 
       if child != nil {
         if !instance_of(child, Control) {
-          die Exception('invalid control in UI')
+          raise Exception('invalid control in UI')
         } else if !reflect.has_prop(child, 'font') {
           child.font = self.font
         }
@@ -216,7 +216,7 @@ class Form < Control {
       if is_function(child) child = child()
       if child != nil {
         if(!instance_of(child, Control))
-          die Exception('invalid control in UI')
+          raise Exception('invalid control in UI')
         child.Dispose(self.ui)
       }
     }

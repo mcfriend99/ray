@@ -70,7 +70,7 @@ class Message < Control {
 
   Paint(ui) {
     if !instance_of(self.ancestor, Form) {
-      die Exception('Message can only have a Form ancestor')
+      raise Exception('Message can only have a Form ancestor')
     }
 
     self.form.lock(self)

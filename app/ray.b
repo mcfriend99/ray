@@ -826,7 +826,7 @@ def Init(debug) {
     }
   }
 
-  if error die Exception(error)
+  if error raise Exception(error)
 
   var ray = load(_bin_path)
 

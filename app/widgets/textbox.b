@@ -35,7 +35,7 @@ class Textbox <  Control {
     self.on_change = options.get('on_change', @(s,t){})
 
     if self.obscure_char and (!is_string(self.obscure_char) or self.obscure_char.length() > 1) {
-      die Exception('invalid obscure character in ${typeof(self)}')
+      raise Exception('invalid obscure character in ${typeof(self)}')
     }
 
     # update textbox bounds since default bound may have width set to zero.
